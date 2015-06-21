@@ -35,5 +35,4 @@ make test
 
 ### Contact
 
-```felipecruz@loogica.net
-```
+`felipecruz@loogica.net`
