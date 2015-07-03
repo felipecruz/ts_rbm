@@ -1,0 +1,29 @@
+{
+  "name": "ts_rbm",
+  "version": "0.0.1",
+  "description": "RBM in typescript",
+  "main": "run.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "dependencies": {
+    "typescript": "1.5.0-beta" 
+  },    
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felipecruz/ts_rbm.git"
+  },
+  "keywords": [
+    "machine-learning",
+    "rbm",
+    "typescript"
+  ],
+  "author": "Felipe Cruz",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/felipecruz/ts_rbm/issues"
+  }
+}
