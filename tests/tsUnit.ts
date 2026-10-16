@@ -257,7 +257,7 @@ module tsUnit {
                 window.location.reload();
 
                 if (typeof previousHandler === 'function') {
-                    previousHandler(ev);
+                    previousHandler.call(window, ev);
                 }
             };
         }

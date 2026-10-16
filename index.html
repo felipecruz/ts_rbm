@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3eb">
+  <meta name="description" content="An interactive field guide to generative models. Teach a tiny Restricted Boltzmann Machine, watch it learn, and see what it imagines.">
+  <title>A little machine for imagination — Fieldnotes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="run.js" defer></script>
+  <script src="assets/vendor/katex/katex.min.js" defer></script>
+  <script src="assets/math.js" defer></script>
+  <script src="assets/tutorial.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#experiment">Skip to the experiment</a>
+  <header class="site-header wrap">
+    <a class="brand" href="#" aria-label="Fieldnotes home"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>fieldnotes<span class="brand-divider"></span><span class="brand-sub">Small experiments. Big ideas.</span></a>
+    <nav aria-label="Main navigation"><a href="#idea">The idea</a><a href="#experiment">The experiment</a><a href="#inside">Under the hood <span aria-hidden="true">↗</span></a></nav>
+  </header>
+
+  <main>
+    <section class="hero wrap" aria-labelledby="title">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="tiny-square"></span> A FIELD GUIDE TO GENERATIVE MACHINES <span class="issue">/ 001</span></div>
+        <h1 id="title">A little machine<br>for <em>imagination.</em></h1>
+        <p class="hero-deck">What does it mean for a machine to create?<br>Let’s find out with a few pixels, a little probability,<br class="desktop-break"> and a model you can see inside.</p>
+        <a class="button primary hero-cta" href="#experiment">Meet your little machine <span aria-hidden="true">↗</span></a>
+        <div class="hero-meta"><span>AN INTERACTIVE ESSAY</span><span class="meta-dot">·</span><span>10 MIN READ + A LITTLE PLAY</span></div>
+      </div>
+      <figure class="hero-art" aria-label="An illustration of scattered pixels becoming a structured circular pattern">
+        <div class="art-top"><span>FIG. 01</span><span>THE EMERGENCE OF A PATTERN</span><span class="art-cross">+</span></div>
+        <canvas id="heroCanvas" width="1000" height="760" aria-hidden="true"></canvas>
+        <div class="art-bottom"><span>A LITTLE RANDOMNESS</span><span class="art-arrow" aria-hidden="true">⟶</span><span>A LITTLE RECOGNITION</span></div>
+      </figure>
+    </section>
+
+    <div class="essay-divider wrap"><span>NO MAGIC. JUST A MODEL OF POSSIBILITY.</span><span>SCROLL TO EXPLORE <span aria-hidden="true">↓</span></span></div>
+
+    <section class="essay-section wrap" id="idea">
+      <aside class="section-marker"><span class="section-no">01</span><span>THE IDEA</span><span class="marker-line"></span></aside>
+      <div class="essay-body">
+        <h2>From “what is this?”<br>to <em>“what could this be?”</em></h2>
+        <div class="prose-columns"><p>A model can learn to recognize a circle. But a <strong>generative model</strong> learns something different: which arrangements of pixels are likely to look like the patterns it has seen.</p><p>Once it learns those relationships, we can ask it to make another pattern. Not by handing it a drawing rule, but by letting it sample from the possibilities it has learned.</p></div>
+        <div class="concept-strip">
+          <div class="concept-input"><div class="mini-patterns" id="conceptPatterns" aria-hidden="true"></div><span>A few examples</span></div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="concept-model"><span class="model-glyph" aria-hidden="true">✳</span><span>Learn the relationships</span></div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="concept-output"><canvas id="conceptOutput" width="90" height="90" aria-hidden="true"></canvas><span>Sample a possibility</span></div>
+        </div>
+        <p class="small-prose">Our machine is a <strong>Restricted Boltzmann Machine</strong>, or RBM. It’s a compact generative model with just two layers. Small enough to inspect. Interesting enough to surprise us.</p>
+        <div class="math-passage first-notation" id="pixels-as-numbers">
+          <div class="eyebrow">A PICTURE, WRITTEN DOWN</div>
+          <h3>Start with 225 little yeses and nos.</h3>
+          <p>Look at one of those drawings. Each square is either on or off. Read across the first row, then the next, and you get a list of 225 numbers. The drawing hasn’t changed. We’ve just given it a form the model can work with.</p>
+          <figure class="math-equation">
+            <div class="math-display" data-display="true" data-tex="\begin{gathered}\mathbf{v}=(v_1,v_2,\ldots,v_{225})\\[5pt]v_i\in\{0,1\}\end{gathered}">A drawing v is a list of 225 pixels; each pixel is either 0 or 1.</div>
+            <figcaption><span class="equation-number">01</span> THE SAME DRAWING, AS A LIST</figcaption>
+          </figure>
+          <p class="math-reading"><span data-tex="\mathbf{v}">v</span> means the whole picture. <span data-tex="v_i">vᵢ</span> means pixel number <span data-tex="i">i</span>. A <span data-tex="1">1</span> is a green square; a <span data-tex="0">0</span> is an empty one. That’s all the notation is saying.</p>
+          <p>We’ll write <span data-tex="p(\mathbf{v})">p(v)</span> for the probability the model assigns to a <em>complete drawing</em>. Learning changes these probabilities. Generating explores the drawings they make possible.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="experiment-section wrap" id="experiment" aria-labelledby="lab-title">
+      <div class="section-heading"><div><div class="eyebrow">02 / THE EXPERIMENT</div><h2 id="lab-title">An imagination of your own.</h2></div><p>Give it a visual vocabulary.<br> Then see what it makes of it.</p></div>
+      <div class="lab">
+        <header class="lab-header"><div class="lab-name"><span class="status-dot"></span> THE PATTERN LABORATORY <span class="lab-version">RBM / 15 × 15</span></div><button class="text-button light" id="resetButton" type="button"><span aria-hidden="true">↺</span> Reset</button></header>
+        <div class="lab-columns">
+          <section class="lab-panel data-panel" aria-labelledby="data-title">
+            <div class="step-label"><span>01</span> THE EXAMPLES</div><h3 id="data-title">A tiny visual vocabulary.</h3><p class="panel-description">These are the only things your machine will know about the world.</p>
+            <div class="segmented" id="presetTabs" role="group" aria-label="Training dataset"><button class="active" data-preset="shapes" aria-pressed="true">Shapes</button><button data-preset="letters" aria-pressed="false">Letters</button><button data-preset="bars" aria-pressed="false">Stripes</button></div>
+            <div class="training-patterns" id="trainingPatterns" aria-label="Training examples"></div>
+            <button class="button outline add-pattern" id="drawButton" type="button"><span aria-hidden="true">+</span> Draw your own</button>
+            <div class="dataset-footer"><span id="exampleCount">6 EXAMPLES</span><span>225 PIXELS EACH</span></div>
+          </section>
+          <section class="lab-panel train-panel" aria-labelledby="train-title">
+            <div class="step-label"><span>02</span> THE LEARNING</div><h3 id="train-title">Find the hidden patterns.</h3><p class="panel-description">The machine tries to rebuild its examples, then adjusts its connections.</p>
+            <div class="settings-row"><label>Hidden units<select id="hiddenUnits"><option value="8">8 units</option><option value="16">16 units</option><option value="24" selected>24 units</option><option value="48">48 units</option></select></label><label>Training epochs<select id="epochs"><option value="300">300 passes</option><option value="600" selected>600 passes</option><option value="1200">1,200 passes</option></select></label></div>
+            <div class="chart-heading"><span>RECONSTRUCTION ERROR</span><span id="errorValue">—</span></div>
+            <div class="chart-wrap"><canvas id="errorChart" aria-label="Mean squared reconstruction error over training epochs" role="img"></canvas><span class="chart-empty" id="chartEmpty">Learning leaves a trace.</span></div>
+            <div class="chart-axis"><span>0</span><span id="epochAxis">600 EPOCHS</span></div>
+            <button class="button primary train-button" id="trainButton" type="button"><span class="play-icon" aria-hidden="true">▶</span><span id="trainButtonText">Train the model</span></button>
+            <div class="progress-track" role="progressbar" aria-label="Training progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="600" id="trainingProgress"><span id="progressFill"></span></div>
+            <p class="training-status" id="trainingStatus" role="status">Ready when you are.</p>
+          </section>
+          <section class="lab-panel imagine-panel" aria-labelledby="imagine-title">
+            <div class="step-label"><span>03</span> THE POSSIBILITIES</div><h3 id="imagine-title">Let it imagine.</h3><p class="panel-description" id="outputDescription">Start with noise. Let the learned relationships guide what comes next.</p>
+            <div class="segmented output-tabs" role="group" aria-label="Experiment mode"><button data-mode="dream" class="active" aria-pressed="true">Generate</button><button data-mode="restore" aria-pressed="false">Restore</button></div>
+            <div class="output-stage"><canvas id="outputCanvas" width="300" height="300" role="img" aria-label="Untrained random pixel pattern"></canvas><span class="output-tag" id="outputTag">BEFORE LEARNING</span></div>
+            <div class="sampling-player" id="samplingPlayer" hidden aria-label="Generation playback">
+              <div class="sampling-heading"><span id="samplingState">IMAGINING</span><span id="samplingStep">STEP 000 / 100</span></div>
+              <div class="sampling-progress" id="samplingProgress" role="progressbar" aria-label="Sampling progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="samplingFill"></span></div>
+              <div class="sampling-history" aria-label="Snapshots from this sampling chain">
+                <figure><canvas id="sampleFrame0" width="90" height="90" role="img" aria-label="Initial noise"></canvas><figcaption>Noise</figcaption></figure>
+                <figure><canvas id="sampleFrame1" width="90" height="90" role="img" aria-label="Step 1, not reached yet"></canvas><figcaption>Step 1</figcaption></figure>
+                <figure><canvas id="sampleFrame10" width="90" height="90" role="img" aria-label="Step 10, not reached yet"></canvas><figcaption>Step 10</figcaption></figure>
+                <figure><canvas id="sampleFrame100" width="90" height="90" role="img" aria-label="Step 100, not reached yet"></canvas><figcaption>Step 100</figcaption></figure>
+              </div>
+              <div class="sampling-actions">
+                <button type="button" class="sampling-button" id="playbackButton">Pause</button>
+                <button type="button" class="sampling-button" id="stepButton" disabled>Step <span aria-hidden="true">→</span></button>
+                <select id="playbackSpeed" aria-label="Playback speed"><option value="0.5">0.5× speed</option><option value="1" selected>1× speed</option><option value="2">2× speed</option></select>
+              </div>
+              <p class="sampling-caption">Each step: pixels → hidden units → pixels.</p>
+            </div>
+            <div class="randomness-control" id="randomnessControl"><label for="temperature">Randomness <span id="temperatureValue">1.0</span></label><input type="range" id="temperature" min="0.5" max="1.5" step="0.1" value="1" aria-describedby="temperatureHint"><div class="range-labels" id="temperatureHint"><span>Familiar</span><span>Unexpected</span></div></div>
+            <div class="restore-control" id="restoreControl" hidden><p>Choose an example on the left. We’ll hide its right half and ask the model to fill it in.</p><button class="text-button" id="damageButton" type="button">Hide the right half again <span aria-hidden="true">↺</span></button></div>
+            <button class="button generate-button" id="generateButton" type="button" disabled><span aria-hidden="true">✳</span><span id="generateButtonText">Generate a pattern</span></button>
+            <p class="output-status" id="outputStatus" role="status">First, teach your machine a few patterns.</p>
+          </section>
+        </div>
+        <footer class="lab-footer"><span><span class="tiny-status"></span> Real learning, right here in your browser.</span><a href="#inside">See what’s happening inside <span aria-hidden="true">↓</span></a></footer>
+      </div>
+      <div class="experiment-notes"><span class="note-label">TRY THIS</span><p>Train on shapes, then generate a few times. Turn up the randomness. Switch to letters and train again. <strong>When its world changes, its imagination changes too.</strong></p></div>
+      <div class="trace-explainer" id="reading-the-chart">
+        <aside class="section-marker"><span class="trace-mark" aria-hidden="true">↘</span><span>READ THE TRACE</span></aside>
+        <div class="math-passage">
+          <h3>What is that falling line measuring?</h3>
+          <p>During training, the machine tries to rebuild each example. Suppose a pixel is on, but the reconstruction gives it only an 80% chance of being on. The miss is <span data-tex="1-0.8=0.2">1 − 0.8 = 0.2</span>. We square that miss, giving <span data-tex="0.2^2=0.04">0.2² = 0.04</span>, so misses in opposite directions can’t cancel out.</p>
+          <p>The chart averages those squared misses over every pixel and every example. Written compactly, that is <strong>mean squared error</strong>:</p>
+          <figure class="math-equation">
+            <div class="math-display" data-display="true" data-tex="\mathrm{MSE}=\frac{1}{225N}\sum_{n=1}^{N}\sum_{i=1}^{225}\bigl(v_i^{(n)}-\tilde v_i^{(n)}\bigr)^2">Mean squared error is the sum of squared pixel misses, divided by 225 times the number of examples.</div>
+            <figcaption><span class="equation-number">02</span> SQUARE EACH MISS. THEN TAKE THE AVERAGE.</figcaption>
+          </figure>
+          <dl class="math-symbols">
+            <div><dt data-tex="v_i^{(n)}">vᵢ⁽ⁿ⁾</dt><dd>Pixel <span data-tex="i">i</span> in example <span data-tex="n">n</span>: the original 0 or 1.</dd></div>
+            <div><dt data-tex="\tilde v_i^{(n)}">ṽᵢ⁽ⁿ⁾</dt><dd>The reconstructed chance of that pixel being on.</dd></div>
+            <div><dt data-tex="\sum">Σ</dt><dd>“Add these up.” First the pixels, then the examples.</dd></div>
+            <div><dt data-tex="N">N</dt><dd>The number of training examples. Six in each starting set.</dd></div>
+          </dl>
+          <p class="math-reading">This is a reading of the reconstruction <em>before</em> each training update. A low value means familiar examples are being rebuilt closely. It doesn’t tell us whether generated samples are diverse or interesting. We’ll meet the actual learning rule below.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="essay-section inside-section wrap" id="inside">
+      <aside class="section-marker"><span class="section-no">03</span><span>UNDER THE HOOD</span><span class="marker-line"></span></aside>
+      <div class="essay-body">
+        <h2>Two layers.<br><em>A conversation in pixels.</em></h2>
+        <p class="section-intro">One layer holds the pixels you can see. The other learns relationships you can’t. They pass signals back and forth.</p>
+        <div class="anatomy" aria-label="Diagram of visible and hidden layers of an RBM"><div class="anatomy-label"><span>VISIBLE LAYER</span><span>225 pixels</span></div><div class="network-diagram" id="networkDiagram" aria-hidden="true"></div><div class="anatomy-label"><span>HIDDEN LAYER</span><span>Learned connections</span></div><div class="anatomy-caption"><span class="legend-dot visible-dot"></span> Pixels <span class="legend-dot hidden-dot"></span> Hidden units <span class="connection-legend"></span> Weighted connections</div></div>
+        <div class="math-passage" id="weighted-votes">
+          <div class="eyebrow">FIRST, THE INTUITION</div>
+          <h3>Each connection is a small vote.</h3>
+          <p>Imagine a hidden unit listening to the drawing. Each lit pixel contributes a vote through its connection. A positive weight pushes the unit toward “on”; a negative weight pushes it toward “off.” The unit also has a <strong>bias</strong>: a starting preference before the pixels vote.</p>
+          <p>The little weight map below makes those votes visible. Pick a hidden unit after training. You’re looking at its 225 connections, one for every square in the drawing. A unit may respond to a mixture of features; it doesn’t have to stand for a named shape.</p>
+        </div>
+        <div class="feature-inspector"><div class="feature-copy"><div class="eyebrow">A WINDOW INTO YOUR MODEL</div><h3>What does a hidden unit see?</h3><p>Select a unit to inspect its connections. A lit pixel with a green weight encourages this unit to turn on; an orange weight discourages it.</p><div id="hiddenUnitButtons" class="hidden-unit-buttons" role="group" aria-label="Choose a hidden unit"></div><span class="feature-status" id="featureStatus">Train the model to reveal its connections.</span></div><div class="feature-visual"><canvas id="featureCanvas" width="225" height="225" role="img" aria-label="Hidden unit weights, available after training"></canvas><div class="weight-legend"><span>−</span><span></span><span>+</span></div></div></div>
+
+        <div class="math-passage" id="evidence-to-probability">
+          <div class="eyebrow">NOW, WRITE DOWN THE IDEA</div>
+          <h3>Add the votes. Turn the total into a chance.</h3>
+          <p>To find the total evidence for one hidden unit, start with its bias and add the votes from the lit pixels. A pixel that’s off contributes zero. We’ll call the total <span data-tex="z_j">zⱼ</span>:</p>
+          <figure class="math-equation">
+            <div class="math-display" data-display="true" data-tex="z_j=b_j+\sum_{i=1}^{225}w_{ij}v_i">Total evidence for hidden unit j equals its bias plus the weighted pixel votes.</div>
+            <figcaption><span class="equation-number">03a</span> STARTING PREFERENCE + PIXEL VOTES</figcaption>
+          </figure>
+          <dl class="math-symbols">
+            <div><dt data-tex="w_{ij}">wᵢⱼ</dt><dd>The weight connecting pixel <span data-tex="i">i</span> to hidden unit <span data-tex="j">j</span>—one square in the weight map.</dd></div>
+            <div><dt data-tex="b_j">bⱼ</dt><dd>That hidden unit’s learned starting preference.</dd></div>
+          </dl>
+          <p>The total can be any number. A probability has to fit between 0 and 1. The <strong>sigmoid</strong>, written <span data-tex="\sigma">σ</span>, makes that conversion smoothly: negative evidence gives a chance below one-half; positive evidence gives a chance above it. At the default randomness, we write:</p>
+          <figure class="math-equation">
+            <div class="math-display" data-display="true" data-tex="\begin{aligned}p(h_j=1\mid\mathbf{v})&amp;=\sigma(z_j)\\[6pt]\sigma(z)&amp;=\frac{1}{1+e^{-z}}\end{aligned}">The chance of hidden unit j turning on, given this drawing, is sigmoid(z). Sigmoid(z) equals 1 divided by 1 plus exp(−z).</div>
+            <figcaption><span class="equation-number">03b</span> EVIDENCE BECOMES A PROBABILITY</figcaption>
+          </figure>
+          <p class="math-reading">Read <span data-tex="p(h_j=1\mid\mathbf{v})">p(hⱼ = 1 | v)</span> as “the chance this hidden unit is on, <em>given this drawing</em>.” The vertical bar means “given.” The <span data-tex="e">e</span> in the sigmoid is the exponential constant, approximately 2.718.</p>
+          <div class="sigmoid-demo" aria-labelledby="sigmoid-title">
+            <div class="demo-copy"><div class="eyebrow">TRY THE EQUATION</div><h4 id="sigmoid-title">Give one unit a little more evidence.</h4><p>Move the total vote from negative to positive. The equation and the green probability bar describe the same change.</p><label for="evidenceSlider">Total evidence <span data-tex="z">z</span><output id="evidenceValue" for="evidenceSlider">+2.0</output></label><input id="evidenceSlider" type="range" min="-4" max="4" step="0.1" value="2" aria-describedby="evidenceHint"><div class="evidence-scale"><span>Against</span><span>Balanced</span><span>For</span></div></div>
+            <div class="demo-result"><div class="math-display" id="evidenceEquation" data-display="true" data-tex="\sigma(2.0)\approx0.881">Sigmoid(2.0) is approximately 0.881.</div><div class="probability-meter" role="meter" aria-label="Chance the illustrative hidden unit is on" aria-valuemin="0" aria-valuemax="100" aria-valuenow="88.1" id="probabilityMeter"><span id="probabilityFill" style="width:88.1%"></span><i aria-hidden="true"></i></div><p><strong id="probabilityValue">88.1%</strong> chance of being on</p><span class="demo-disclaimer" id="evidenceHint">An illustrative unit; your trained model stays unchanged.</span></div>
+          </div>
+          <p>A chance is not yet a decision. If the probability is 0.8, the model draws an on/off state like a coin weighted toward “on.” It can still come up “off.” That small act of sampling is where the variation comes from.</p>
+        </div>
+
+        <div class="math-passage" id="learning-associations">
+          <div class="eyebrow">BACK TO THE TRAIN BUTTON</div>
+          <h3>Keep the associations the examples support.</h3>
+          <p>Suppose a pixel and a hidden unit tend to be active together in the examples. Their connection should grow stronger. But if the machine’s own reconstruction already produces that association too often, the update should push back.</p>
+          <p>So every training pass compares two averages: how strongly the pair appears together in the examples, and how strongly it appears in a short reconstruction. The difference tells us which way to adjust the connection.</p>
+          <figure class="math-equation">
+            <div class="math-display" data-display="true" data-tex="\begin{aligned}\Delta w_{ij}&amp;=\eta\Bigl(\langle v_iq_j\rangle_{\mathrm{examples}}\\&amp;\qquad-\langle\tilde v_i\tilde q_j\rangle_{\mathrm{rebuilt}}\Bigr)\end{aligned}">The change in a connection is the learning rate times its average example association minus its average reconstructed association.</div>
+            <figcaption><span class="equation-number">04</span> ASSOCIATIONS IN THE EXAMPLES − ASSOCIATIONS IN THE REBUILD</figcaption>
+          </figure>
+          <dl class="math-symbols">
+            <div><dt data-tex="\Delta w_{ij}">Δwᵢⱼ</dt><dd>The small adjustment added to this connection’s weight.</dd></div>
+            <div><dt data-tex="\eta=0.12">η = 0.12</dt><dd>How big an adjustment to make: this experiment’s learning rate.</dd></div>
+            <div><dt data-tex="q_j,\;\tilde q_j">qⱼ, q̃ⱼ</dt><dd>The hidden unit’s on-probability for the original drawing and for its reconstruction.</dd></div>
+            <div><dt data-tex="\langle\cdot\rangle">⟨·⟩</dt><dd>Average over all training examples. The tilde marks a reconstructed quantity.</dd></div>
+          </dl>
+          <p class="math-reading">For example, an average association of 0.6 in the data and 0.4 in the rebuild gives <span data-tex="\Delta w=0.12(0.6-0.4)=0.024">Δw = 0.12(0.6 − 0.4) = 0.024</span>. A small positive update: the next pass will give this connection a stronger vote.</p>
+          <p>This is our implementation’s <strong>one-step contrastive divergence</strong>, or CD-1. It samples the hidden states, rebuilds pixel <em>probabilities</em>, then recomputes the hidden probabilities. The chart reports the reconstruction miss; the weights change through these association updates. Biases are adjusted too. <a class="source-note" href="https://www.cs.toronto.edu/~hinton/absps/guideTR.pdf#page=7" target="_blank" rel="noopener">Training reference ↗</a></p>
+        </div>
+
+        <div class="math-passage" id="sampling-math">
+          <div class="eyebrow">BACK TO THE ANIMATION</div>
+          <h3>One tick is a complete conversation.</h3>
+          <p>During generation, the learned connections stay fixed. We begin with random pixels, draw hidden states using their probabilities, then let those hidden states vote on new pixels. A new picture appears. We repeat the same round trip.</p>
+          <p>Writing the current picture as <span data-tex="\mathbf v^{(t)}">v⁽ᵗ⁾</span>, one tick of the step counter means:</p>
+          <figure class="math-equation">
+            <div class="math-display" data-display="true" data-tex="\begin{aligned}\mathbf h^{(t+1)}&amp;\sim p(\mathbf h\mid\mathbf v^{(t)})\\[8pt]\mathbf v^{(t+1)}&amp;\sim p(\mathbf v\mid\mathbf h^{(t+1)})\end{aligned}">First draw hidden states from the current pixels. Then draw the next pixels from those hidden states.</div>
+            <figcaption><span class="equation-number">05</span> PIXELS → HIDDEN STATES → NEW PIXELS</figcaption>
+          </figure>
+          <p class="math-reading"><span data-tex="\sim">~</span> means “randomly draw from,” not “equals.” <span data-tex="t">t</span> counts the round trips. After the initial noise frame, each new binary drawing is produced by those two sampling operations.</p>
+          <p>The return trip uses the same connections in the other direction. Each pixel adds up votes from the hidden units, plus its own bias <span data-tex="a_i">aᵢ</span>. If there are <span data-tex="m">m</span> hidden units, its on-probability at the default randomness is:</p>
+          <div class="math-display standalone-equation" data-display="true" data-tex="p(v_i=1\mid\mathbf h)=\sigma\!\left(a_i+\sum_{j=1}^{m}w_{ij}h_j\right)">A pixel’s chance of being on is the sigmoid of its bias plus votes from the hidden units.</div>
+          <p>That repeated back-and-forth is <strong>Gibbs sampling</strong>. A frame can settle, wander, or revisit an earlier pattern. The 100-step playback lets us observe a short chain; it does not guarantee that the chain has fully explored the model’s distribution.</p>
+          <p class="experiment-connection"><span aria-hidden="true">↗</span> <a href="#experiment">Pause the animation and press Step.</a> You’re watching both lines of equation 05 happen once. In Restore, the known pixels are put back after every round trip, so only the missing region can change.</p>
+        </div>
+
+        <div class="math-passage" id="temperature-math">
+          <div class="eyebrow">BACK TO THE RANDOMNESS SLIDER</div>
+          <h3>The same evidence. A softer decision.</h3>
+          <p>Turn up randomness and the machine becomes less decisive about the votes it receives. Turn it down and it follows those votes more strongly. The learned connections stay fixed; we change how their total is converted into a chance.</p>
+          <p>The slider’s value is a <strong>temperature</strong>, written <span data-tex="T">T</span>. Divide the evidence by it before applying the same sigmoid:</p>
+          <figure class="math-equation">
+            <div class="math-display" data-display="true" data-tex="p_{\mathrm{on}}=\sigma\!\left(\frac{z}{T}\right)">The on-probability is sigmoid(total evidence divided by temperature).</div>
+            <figcaption><span class="equation-number">06</span> CHANGE THE DECISIVENESS, KEEP THE LEARNED VOTES</figcaption>
+          </figure>
+          <p>Hold the evidence at <span data-tex="z=2">z = 2</span>. Here is what the three slider settings mean for that same unit:</p>
+          <div class="temperature-comparison" role="group" aria-label="On-probability for fixed evidence z equals 2">
+            <div><span class="temperature-name">MORE DECISIVE</span><span data-tex="T=0.5">T = 0.5</span><strong>98.2%</strong><span>chance of “on”</span></div>
+            <div><span class="temperature-name">DEFAULT</span><span data-tex="T=1">T = 1</span><strong>88.1%</strong><span>chance of “on”</span></div>
+            <div><span class="temperature-name">MORE VARIABLE</span><span data-tex="T=1.5">T = 1.5</span><strong>79.1%</strong><span>chance of “on”</span></div>
+          </div>
+          <p class="math-reading">Higher temperature pulls probabilities toward 50%, whether the evidence is positive or negative. It can make samples more variable, but it doesn’t guarantee a more interesting result. Generate applies this setting to both layers. Restore uses <span data-tex="T=1">T = 1</span>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing wrap"><div class="closing-star" aria-hidden="true">✳</div><div><div class="eyebrow">04 / THE BIGGER PICTURE</div><h2>A tiny model.<br><em>A surprisingly big idea.</em></h2><p>This machine has no idea what a circle is. It has learned that some pixels tend to appear together. From those relationships, it can produce a pattern it wasn’t explicitly handed.</p><p>That is the generative idea: <strong>learn a world of possibilities, then draw something from it.</strong> With only a handful of examples, this little machine may repeat, blend, or lose a pattern. Those limits are part of what makes it worth exploring.</p><a class="text-link" href="#experiment">Go on. Change its world. <span aria-hidden="true">↗</span></a></div></section>
+
+    <section class="reading wrap"><span class="eyebrow">KEEP EXPLORING</span><div><a href="https://www.cs.toronto.edu/~hinton/absps/guideTR.pdf" target="_blank" rel="noopener">A practical guide to training RBMs <span>Geoffrey Hinton, 2010 ↗</span></a><a href="https://github.com/felipecruz/ts_rbm" target="_blank" rel="noopener">Read the code behind the experiment <span>TypeScript · Open source ↗</span></a></div></section>
+  </main>
+  <footer class="site-footer wrap"><a href="#" class="brand">fieldnotes<span class="footer-dot">.</span></a><span>Built with curiosity. Made to be explored.</span><span>AN EXPERIMENT BY FELIPE CRUZ</span></footer>
+
+  <dialog id="drawDialog" aria-labelledby="drawTitle"><form method="dialog"><button class="dialog-close" aria-label="Close drawing editor" value="cancel">×</button></form><div class="eyebrow">ADD TO ITS LITTLE WORLD</div><h2 id="drawTitle">Make your mark.</h2><p>Draw a pattern with your mouse, finger, or keyboard. Each square is one pixel.</p><div id="drawingGrid" class="drawing-grid" role="group" aria-label="15 by 15 pixel drawing grid"></div><div class="dialog-actions"><button class="text-button" id="clearDrawing" type="button">Clear drawing</button><button class="button primary" id="saveDrawing" type="button">Add to examples <span aria-hidden="true">↗</span></button></div><p class="dialog-hint" id="drawingHint" role="status">Arrow keys move. Space toggles a pixel.</p></dialog>
+</body>
+</html>

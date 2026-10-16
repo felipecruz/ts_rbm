@@ -60,7 +60,7 @@ module LinearAlgebra {
     values: Array<number>
     size: number
 
-    constructor(values?: Array<number>) {
+    constructor(values: Array<number>) {
       this.size = values.length
 
       if (values) {

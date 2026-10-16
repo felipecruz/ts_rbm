@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "rootDir": "./",
+    "outFile": "run.js",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["es6", "dom", "es2015.iterable", "es2015.generator"],
+    "downlevelIteration": true
+  },
+  "include": [
+    "src/**/*",
+    "run.ts"
+  ]
+}

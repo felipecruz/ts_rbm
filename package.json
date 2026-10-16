@@ -1,17 +1,16 @@
 {
   "name": "ts_rbm",
   "version": "0.0.1",
-  "description": "RBM in typescript",
+  "description": "An interactive essay about generative models, built around a TypeScript restricted Boltzmann machine",
   "main": "run.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "test"
+    "build": "tsc --project tsconfig.json && node scripts/build-math.mjs",
+    "dev": "npm run build && node scripts/serve.mjs",
+    "test": "node --test scripts/test.mjs scripts/test-math.mjs"
   },
-  "dependencies": {
-    "typescript": "1.5.0-beta" 
-  },    
   "repository": {
     "type": "git",
     "url": "https://github.com/felipecruz/ts_rbm.git"
@@ -25,5 +24,11 @@
   "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/felipecruz/ts_rbm/issues"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "katex": "0.18.0"
   }
 }
