@@ -43,6 +43,8 @@ Each image is a 15 × 15 grid: 225 visible units that can be on or off. A smalle
 - **Generate:** start from random pixels and alternate between hidden and visible units to produce samples from the learned distribution. Temperature changes how random those samples are.
 - **Inspect:** select a hidden unit to see its learned positive and negative pixel weights.
 
+Restore displays the final completion immediately in the large preview, while a highlighted live frame in the trace plays its recorded evolution. The completed image stays fixed during playback, stepping, and replay. Generation continues to animate in the large preview.
+
 Generation and restoration play the model's actual Gibbs-sampling chain: initial noise followed by 100 visible → hidden → visible updates. Pause, advance one step, or change playback speed to inspect the process. The filmstrip retains steps 0, 1, 10, and 100; Replay shows the exact same recorded chain. Starting a new sample draws a new chain. Changing the dataset, training settings, or mode cancels the current playback. Reduced-motion preferences start playback paused, with manual stepping available.
 
 Generated images are not labels or guaranteed new designs. With a small dataset, a small model often reproduces familiar patterns, combines fragments, or produces noise. That limitation is part of the experiment: a generative model learns a distribution from examples, and sampling explores what it has learned.

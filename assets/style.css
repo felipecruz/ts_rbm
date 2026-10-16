@@ -1807,3 +1807,19 @@ dialog>p {
   .temperature-comparison strong { font-size:30px; }
   .temperature-comparison [data-tex] { font-size:12px; }
 }
+
+/* Keep the completed restoration above, and give its evolving trace a focal point. */
+.restoration-link { display:block; text-align:center; color:var(--green); font-size:11px; font-weight:600; margin-top:8px; text-decoration:underline; text-underline-offset:4px; }
+.restoration-trace { border-top:3px solid var(--green); }
+.restoration-trace .sampling-history { align-items:center; gap:10px; }
+.restoration-trace .sampling-history canvas { width:40px; height:40px; }
+.restoration-trace .prediction-live canvas { width:70px; height:70px; outline:2px solid var(--green); outline-offset:4px; }
+.restoration-trace .prediction-live figcaption { color:var(--green); font-weight:650; }
+@media(max-width:760px) {
+  .sampling-player.restoration-trace { grid-template-rows:auto 100px 77px; }
+}
+@media(max-width:380px) {
+  .restoration-trace .sampling-history { gap:7px; }
+  .restoration-trace .sampling-history canvas { width:32px; height:32px; }
+  .restoration-trace .prediction-live canvas { width:54px; height:54px; }
+}

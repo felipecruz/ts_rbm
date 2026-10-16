@@ -239,7 +239,7 @@
       label = 'Learning';
     } else if (sampling && sampling.step < SAMPLING_STEPS) {
       state = sampling.playing ? 'sampling' : 'paused';
-      label = sampling.playing ? sampling.mode === 'restore' ? 'Restoring' : 'Imagining' : 'Sampling paused';
+      label = sampling.playing ? sampling.mode === 'restore' ? 'Tracing restoration' : 'Imagining' : 'Sampling paused';
     } else if (trainingFailed) {
       state = 'paused';
       label = 'Training stopped';
@@ -380,6 +380,7 @@
     // The identity check in every scheduled step also rejects stale callbacks.
     sampling = null;
     $('samplingPlayer').hidden = true;
+    $('watchRestoration').hidden = true;
     $('temperature').disabled = false;
     $('generateButtonText').textContent = mode === 'dream' ? 'Generate a pattern' : 'Restore the pattern';
     syncLabState();
@@ -388,7 +389,7 @@
   function syncPlayback() {
     if (!sampling) return;
     const finished = sampling.step === SAMPLING_STEPS;
-    $('samplingState').textContent = finished ? 'CHAIN COMPLETE' : sampling.playing ? 'IMAGINING' : 'PAUSED';
+    $('samplingState').textContent = finished ? 'CHAIN COMPLETE' : sampling.playing ? sampling.mode === 'restore' ? 'HOW IT FORMED' : 'IMAGINING' : 'PAUSED';
     $('playbackButton').textContent = finished ? 'Replay' : sampling.playing ? 'Pause' : 'Play';
     $('stepButton').disabled = finished || sampling.playing;
     $('temperature').disabled = !finished;
@@ -403,22 +404,33 @@
     const label = sampling.mode === 'restore'
       ? `${sampling.patternName} completion, step ${frame.step}; original left half preserved`
       : `Generated sample ${sampling.number}, Gibbs step ${frame.step} of ${SAMPLING_STEPS}`;
-    updateOutput(frame.visible.array(), label);
+    const framePixels = frame.visible.array();
+    if (sampling.mode === 'restore') {
+      drawPixels($('predictionFrame'), framePixels);
+      $('predictionFrame').setAttribute('aria-label', label);
+      $('predictionStep').textContent = `Step ${frame.step} · now`;
+    } else {
+      updateOutput(framePixels, label);
+    }
     $('samplingStep').textContent = `STEP ${String(frame.step).padStart(3, '0')} / ${SAMPLING_STEPS}`;
     $('samplingProgress').setAttribute('aria-valuenow', String(frame.step));
     $('samplingFill').style.width = `${frame.step / SAMPLING_STEPS * 100}%`;
     if (SNAPSHOT_STEPS.includes(frame.step)) {
       const canvas = $(`sampleFrame${frame.step}`);
-      drawPixels(canvas, outputPixels);
+      drawPixels(canvas, framePixels);
       const frameLabel = frame.step === 0
         ? sampling.mode === 'restore' ? 'Known pixels plus random noise' : 'Initial noise'
         : `Step ${frame.step}`;
       canvas.setAttribute('aria-label', `${frameLabel} from this ${sampling.mode === 'restore' ? 'completion' : 'generation'}`);
       canvas.parentElement.classList.add('captured');
     }
+    if (sampling.mode === 'restore') {
+      $('outputTag').textContent = 'FINAL SAMPLE · 100 STEPS';
+      return;
+    }
     $('outputTag').textContent = frame.step === 0
-      ? sampling.mode === 'restore' ? 'KNOWN PIXELS + RANDOM NOISE' : 'STARTING FROM RANDOM NOISE'
-      : sampling.mode === 'restore' ? 'IMAGINING THE MISSING PIXELS' : `SAMPLE ${String(sampling.number).padStart(3, '0')} / GIBBS SAMPLING`;
+      ? 'STARTING FROM RANDOM NOISE'
+      : `SAMPLE ${String(sampling.number).padStart(3, '0')} / GIBBS SAMPLING`;
   }
 
   function finishSampling() {
@@ -427,7 +439,7 @@
     sampling.playing = false;
     syncPlayback();
     if (sampling.mode === 'restore') {
-      $('outputTag').textContent = 'A POSSIBLE COMPLETION';
+      $('outputTag').textContent = 'FINAL SAMPLE · 100 STEPS';
       $('outputStatus').textContent = '100 steps. Left half preserved; right half sampled.';
     } else {
       $('outputTag').textContent = `SAMPLE ${String(sampling.number).padStart(3, '0')} / 100 STEPS`;
@@ -480,6 +492,7 @@
         ? 'Each update is a real sample. Patterns can settle, shift, or return.'
         : `Paused at step ${sampling.step}. Use Step to inspect the next change.`;
     }
+    if (sampling.mode === 'restore') $('outputStatus').textContent = 'The final sample stays above. Playback below follows its original prediction steps.';
     syncPlayback();
     scheduleSampling();
   }
@@ -503,16 +516,32 @@
       canvas.parentElement.classList.remove('captured');
       canvas.setAttribute('aria-label', `Step ${step}, not reached yet`);
     }
+    const restoring = mode === 'restore';
+    $('samplingPlayer').classList.toggle('restoration-trace', restoring);
+    $('samplingPlayer').setAttribute('aria-label', restoring ? 'Restoration evolution playback' : 'Generation playback');
+    $('predictionLive').hidden = !restoring;
+    $('watchRestoration').hidden = !restoring;
+    $('samplingTitle').textContent = restoring ? 'Watch the missing half emerge.' : 'From noise to possibility.';
+    $('samplingCaption').textContent = restoring
+      ? 'The result is above. Here is the actual path from noise to that sample; the left half stays fixed.'
+      : 'Each step: pixels → hidden units → pixels.';
     $('sampleFrame0').nextElementSibling.textContent = mode === 'restore' ? 'Start' : 'Noise';
     $('samplingPlayer').hidden = false;
-    const initial = iterator.next().value;
-    sampling.frames.push(initial);
+    // Compute restoration once, then play those exact frames while its result stays visible.
+    if (restoring) {
+      sampling.frames = Array.from(iterator);
+      updateOutput(sampling.frames[SAMPLING_STEPS].visible.array(),
+        `${sampling.patternName}: final restoration after 100 steps; original left half preserved`);
+    } else {
+      sampling.frames.push(iterator.next().value);
+    }
+    const initial = sampling.frames[0];
     renderSamplingFrame(initial);
     syncPlayback();
     $('outputStatus').textContent = motionPreference.matches
       ? 'Motion is reduced. Use Step, or choose Play to watch the chain.'
       : mode === 'restore'
-        ? 'The missing half starts as noise. The visible half stays fixed.'
+        ? 'Your completed sample is ready. Watch how the missing half formed below.'
         : 'Watch the noise evolve. Each update is one real sampling step.';
     scheduleSampling();
   }
@@ -595,7 +624,7 @@
     if (!sampling || sampling.playing) return;
     advanceSampling();
     if (sampling.step < SAMPLING_STEPS) {
-      $('outputStatus').textContent = `Step ${sampling.step}: sampled hidden units, then sampled pixels.`;
+      $('outputStatus').textContent = sampling.mode === 'restore' ? `Trace step ${sampling.step} below. The final sample above stays fixed.` : `Step ${sampling.step}: sampled hidden units, then sampled pixels.`;
     }
   });
   $('playbackSpeed').addEventListener('change', scheduleSampling);
