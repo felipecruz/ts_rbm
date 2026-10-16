@@ -4,6 +4,8 @@ An interactive essay about generative models, with a restricted Boltzmann machin
 
 The essay and experiment run locally in your browser. Training data and model weights stay on your device; there is no server-side model, account, API key, or external ML library.
 
+Read the live essay: **[A little machine for imagination](https://felipecruz.github.io/ts_rbm/)**.
+
 ## Run locally
 
 Install [Node.js](https://nodejs.org/) 18 or newer, then:
@@ -23,6 +25,14 @@ npm test        # Run the original algebra suite, RBM behavior, and math renderi
 `make`, `make dev`, and `make test` are aliases for these commands. The project uses TypeScript and a pinned [KaTeX](https://katex.org/) dependency; the local server and test runner use Node's standard library.
 
 The essay introduces its equations alongside the ideas they describe. LaTeX lives in `data-tex` attributes, with readable text inside each element as a fallback. `npm run build` checks every equation and copies KaTeX's script, styles, and fonts to `assets/vendor/katex/`, so rendering does not depend on a math CDN. KaTeX supplies both visual HTML and accessible MathML. These generated assets are ignored by Git; include them alongside `index.html`, `run.js`, and `assets/` when publishing the built page. Rebuild after changing equations to check their syntax.
+
+## Publish to GitHub Pages
+
+The repository uses GitHub Actions to publish the tutorial at [felipecruz.github.io/ts_rbm/](https://felipecruz.github.io/ts_rbm/). A separate personal Pages repository is not required.
+
+Every push to `main` installs the locked dependencies, runs the tests, builds the model and math assets, and deploys the resulting website. You can also run **Deploy tutorial to GitHub Pages** manually from the repository's Actions tab. In **Settings → Pages**, the publishing source is **GitHub Actions**.
+
+Run `npm run build:site` to prepare the same website locally in `_site/`. The deployment contains only the essay, browser scripts, styles, and bundled KaTeX assets. Generated files stay out of Git.
 
 ## The experiment
 
@@ -53,6 +63,8 @@ The error chart reports mean squared reconstruction error per pixel. It is a use
 - `scripts/test.mjs` — temporary compilation and Node tests for probability ranges, learning, reproducibility, generation, and completion.
 - `scripts/serve.mjs` — a dependency-free local static server.
 - `scripts/build-math.mjs` — formula validation and local KaTeX asset preparation.
+- `scripts/build-site.mjs` — packages the static website for GitHub Pages.
+- `.github/workflows/deploy-pages.yml` — tests, builds, and publishes pushes to `main`.
 
 No generated test files are left in the repository. `run.js` is a build artifact and can be regenerated with `npm run build`.
 

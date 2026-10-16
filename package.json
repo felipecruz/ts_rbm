@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json && node scripts/build-math.mjs",
+    "build:site": "npm run build && node scripts/build-site.mjs",
     "dev": "npm run build && node scripts/serve.mjs",
     "test": "node --test scripts/test.mjs scripts/test-math.mjs"
   },
