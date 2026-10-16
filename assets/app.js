@@ -4,7 +4,13 @@
   const $ = id => document.getElementById(id);
   const SIZE = PlaygroundData.size;
   const PIXELS = SIZE * SIZE;
-  const colors = { green: '#34553b', off: '#e5ebd7', lime: '#b7ca8b', orange: '#bb7857' };
+  const theme = getComputedStyle(document.documentElement);
+  const themeColor = name => theme.getPropertyValue(`--${name}`).trim();
+  const colors = {
+    green: themeColor('green'), off: themeColor('pixel-off'),
+    mid: themeColor('pixel-mid'), light: themeColor('pixel-light'),
+    orange: themeColor('orange'), paper: themeColor('paper'), line: themeColor('line')
+  };
   const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
   let presetId = 'shapes';
   let patterns = [];
@@ -13,6 +19,7 @@
   let model = null;
   let training = false;
   let trained = false;
+  let trainingFailed = false;
   let trainingToken = 0;
   let errors = [];
   let mode = 'dream';
@@ -31,20 +38,29 @@
   function matrix(pixels) { return new LinearAlgebra.DenseMatrix(1, PIXELS, pixels); }
   function dataset() { return new LinearAlgebra.DenseMatrix(patterns.length, PIXELS, patterns.flatMap(pattern => pattern.pixels)); }
   function noise() { return Array.from({ length: PIXELS }, () => Math.random() < 0.33 ? 1 : 0); }
+  function blendColors(from, to, amount) {
+    const channels = hex => [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16));
+    const start = channels(from);
+    const end = channels(to);
+    return `rgb(${start.map((value, index) => Math.round(value + (end[index] - value) * amount)).join(',')})`;
+  }
   function drawPixels(canvas, pixels, options = {}) {
     const ctx = canvas.getContext('2d');
     const cell = canvas.width / SIZE;
     const gap = options.gap === undefined ? cell * .12 : options.gap;
+    const pixelGap = gap === 0 ? 0 : Math.max(1, Math.round(gap));
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let y = 0; y < SIZE; y++) {
       for (let x = 0; x < SIZE; x++) {
         const index = y * SIZE + x;
         ctx.fillStyle = options.colorFn ? options.colorFn(pixels[index], index) : pixels[index] ? (options.on || colors.green) : (options.off || colors.off);
-        ctx.fillRect(x * cell + gap / 2, y * cell + gap / 2, cell - gap, cell - gap);
+        const left = Math.round(x * cell);
+        const top = Math.round(y * cell);
+        ctx.fillRect(left, top, Math.round((x + 1) * cell) - left - pixelGap, Math.round((y + 1) * cell) - top - pixelGap);
       }
     }
   }
-  function smallCanvas(pixels, size = 100) {
+  function smallCanvas(pixels, size = 60) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -66,6 +82,8 @@
     const cy = 380;
     let seed = 62;
     function random() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+    const settledTones = [colors.green, blendColors(colors.green, colors.mid, .4), colors.mid, colors.light];
+    const scatteredTones = [colors.mid, blendColors(colors.mid, colors.light, .5), colors.light, blendColors(colors.light, colors.off, .4)];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // An editorial illustration, deliberately distinct from the live model output.
     for (let y = 2; y < 32; y++) {
@@ -80,24 +98,24 @@
         const scatter = random();
         const occupied = ring ? scatter < .27 + fade * .8 : scatter < .095 * (1 - fade);
         if (!occupied) {
-          if (distance < 320 && random() > .76) { ctx.fillStyle = '#a6b69321'; ctx.fillRect(px + 8, py + 8, 2, 2); }
+          if (distance < 320 && random() > .76) { ctx.fillStyle = `${colors.mid}21`; ctx.fillRect(px + 8, py + 8, 2, 2); }
           continue;
         }
-        const palette = fade > .75 ? ['#2f4c37','#3d5b3c','#657e4c','#a3b879'] : ['#698354','#8fa56b','#b1c486','#c3d098','#9aad72'];
+        const palette = fade > .75 ? settledTones : scatteredTones;
         ctx.fillStyle = palette[Math.floor(random() * palette.length)];
         const scale = px < 330 ? .5 + random() * .5 : 1;
         const size = 18 * scale;
         ctx.fillRect(px, py, size, size);
       }
     }
-    ctx.strokeStyle = '#81946d40';
+    ctx.strokeStyle = `${colors.mid}40`;
     ctx.lineWidth = 1;
     ctx.setLineDash([3, 6]);
     ctx.beginPath(); ctx.arc(cx + 10, cy, 285, -.38, 1.12); ctx.stroke();
     ctx.beginPath(); ctx.arc(cx + 10, cy, 285, 2.1, 3.5); ctx.stroke();
     ctx.setLineDash([]);
     for (const [x,y] of [[820,205],[283,573],[568,65]]) {
-      ctx.strokeStyle = '#6c815b70'; ctx.beginPath(); ctx.moveTo(x-6,y); ctx.lineTo(x+6,y); ctx.moveTo(x,y-6); ctx.lineTo(x,y+6); ctx.stroke();
+      ctx.strokeStyle = `${colors.mid}70`; ctx.beginPath(); ctx.moveTo(x-6,y); ctx.lineTo(x+6,y); ctx.moveTo(x,y-6); ctx.lineTo(x,y+6); ctx.stroke();
     }
   }
 
@@ -114,11 +132,11 @@
       const x = 20 + v * 40;
       for (let h = 0; h < countHidden; h++) {
         const hx = 90 + h * 60;
-        lines += `<line x1="${x}" y1="22" x2="${hx}" y2="130" stroke="#9aaf7e" stroke-opacity="${(v+h)%4===0 ? '.45' : '.13'}" stroke-width="${(v+h)%4===0 ? '1.3' : '.7'}"/>`;
+        lines += `<line x1="${x}" y1="22" x2="${hx}" y2="130" stroke="${colors.mid}" stroke-opacity="${(v+h)%4===0 ? '.45' : '.13'}" stroke-width="${(v+h)%4===0 ? '1.3' : '.7'}"/>`;
       }
-      dots += `<circle cx="${x}" cy="22" r="6" fill="${v%3 ? '#4c6a47' : '#a8bd83'}"/>`;
+      dots += `<circle cx="${x}" cy="22" r="6" fill="${colors.green}"/>`;
     }
-    for (let h = 0; h < countHidden; h++) dots += `<circle cx="${90+h*60}" cy="130" r="9" fill="${h%3 ? '#bdcf97' : '#789b61'}" stroke="#90aa6f" stroke-width="1"/>`;
+    for (let h = 0; h < countHidden; h++) dots += `<circle cx="${90+h*60}" cy="130" r="9" fill="${colors.light}" stroke="${colors.mid}" stroke-width="1"/>`;
     $('networkDiagram').innerHTML = `<svg viewBox="0 0 600 155" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${lines}${dots}</svg>`;
   }
 
@@ -162,7 +180,7 @@
     const w = rect.width;
     const h = rect.height;
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#dfe5d6';
+    ctx.strokeStyle = colors.line;
     ctx.setLineDash([2,4]);
     for (let i=0; i<4; i++) { const y = 8 + i*(h-16)/3; ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke(); }
     ctx.setLineDash([]);
@@ -173,10 +191,10 @@
     ctx.beginPath();
     errors.forEach((value,index) => { const [x,y] = point(value,index); index===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
     ctx.lineTo(point(0,errors.length-1)[0],h);ctx.lineTo(0,h);ctx.closePath();
-    const gradient = ctx.createLinearGradient(0,0,0,h);gradient.addColorStop(0,'#829e5530');gradient.addColorStop(1,'#829e5502');ctx.fillStyle=gradient;ctx.fill();
+    const gradient = ctx.createLinearGradient(0,0,0,h);gradient.addColorStop(0,`${colors.green}30`);gradient.addColorStop(1,`${colors.green}02`);ctx.fillStyle=gradient;ctx.fill();
     ctx.beginPath(); errors.forEach((value,index) => { const [x,y]=point(value,index);index===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-    ctx.strokeStyle = '#587c3e';ctx.lineWidth=1.6;ctx.lineJoin='round';ctx.stroke();
-    const [x,y] = point(errors[errors.length-1],errors.length-1);ctx.beginPath();ctx.arc(x,y,2.8,0,Math.PI*2);ctx.fillStyle='#42652e';ctx.fill();
+    ctx.strokeStyle = colors.green;ctx.lineWidth=1.6;ctx.lineJoin='round';ctx.stroke();
+    const [x,y] = point(errors[errors.length-1],errors.length-1);ctx.beginPath();ctx.arc(x,y,2.8,0,Math.PI*2);ctx.fillStyle=colors.green;ctx.fill();
   }
 
   function renderUnits() {
@@ -192,14 +210,14 @@
       button.setAttribute('aria-label',`Inspect hidden unit ${index+1}`);
       button.setAttribute('aria-pressed',String(index===selectedUnit));
       button.title=`Hidden unit ${index+1}`;
-      if (trained) button.style.background = `hsl(92 27% ${82-(activations[index] || 0)*45}%)`;
+      if (trained) button.style.background = blendColors(colors.off, colors.green, activations[index] || 0);
       button.addEventListener('click',()=> {selectedUnit=index;renderUnits();});
       return button;
     });
     $('hiddenUnitButtons').replaceChildren(...nodes);
     if (hadFocus && trained) nodes[selectedUnit].focus({preventScroll:true});
     if (!trained || !model) {
-      drawPixels($('featureCanvas'),Array(PIXELS).fill(0),{off:'#e2e8d7'});
+      drawPixels($('featureCanvas'),Array(PIXELS).fill(0));
       $('featureStatus').textContent='Train the model to reveal its connections.';
       return;
     }
@@ -207,26 +225,52 @@
     const max = Math.max(.001,...weights.map(Math.abs));
     drawPixels($('featureCanvas'),weights,{colorFn:value=> {
       const strength = Math.min(1,Math.abs(value)/max);
-      const base=[237,239,224]; const target=value>=0?[42,82,49]:[186,112,75];
-      return `rgb(${base.map((v,i)=>Math.round(v+(target[i]-v)*strength)).join(',')})`;
+      return blendColors(colors.paper, value >= 0 ? colors.green : colors.orange, strength);
     }});
     $('featureStatus').textContent=`Unit ${selectedUnit+1} of ${count} · color scaled to this unit’s strongest weight`;
     $('featureCanvas').setAttribute('aria-label',`Signed connection weights for hidden unit ${selectedUnit+1}`);
   }
 
+  function syncLabState() {
+    let state = 'ready';
+    let label = 'Ready to learn';
+    if (training) {
+      state = 'learning';
+      label = 'Learning';
+    } else if (sampling && sampling.step < SAMPLING_STEPS) {
+      state = sampling.playing ? 'sampling' : 'paused';
+      label = sampling.playing ? sampling.mode === 'restore' ? 'Restoring' : 'Imagining' : 'Sampling paused';
+    } else if (trainingFailed) {
+      state = 'paused';
+      label = 'Training stopped';
+    } else if (!sampling && model && errors.length > 0 && errors.length < Number($('epochs').value)) {
+      state = 'paused';
+      label = 'Training paused';
+    } else if (trained) {
+      state = 'trained';
+      label = 'Ready to imagine';
+    }
+    $('labState').dataset.state = state;
+    $('labStateText').textContent = label;
+    $('patternLab').dataset.phase = state;
+    $('epochReadout').textContent = `${errors.length.toLocaleString()} / ${Number($('epochs').value).toLocaleString()}`;
+  }
+
   function setTrainingUI(active) {
     training = active;
+    if (active) trainingFailed = false;
     document.querySelectorAll('[data-preset], #hiddenUnits, #epochs').forEach(el=>el.disabled=active);
     $('drawButton').disabled=active || patterns.length>=18;
     $('generateButton').disabled=active || !trained;
     $('trainButtonText').textContent=active?'Pause training':trained?'Train again':'Train the model';
     $('trainButton').querySelector('.play-icon').textContent=active?'Ⅱ':'▶';
+    syncLabState();
   }
 
   function resetModel() {
     cancelSampling();
     trainingToken++;
-    model=null;trained=false;errors=[];sampleCount=0;
+    model=null;trained=false;trainingFailed=false;errors=[];sampleCount=0;
     setTrainingUI(false);
     $('progressFill').style.width='0%';
     $('trainingProgress').setAttribute('aria-valuenow','0');
@@ -284,16 +328,18 @@
       try {
         do { errors.push(model.runEpoch(data).error); } while(errors.length<target && performance.now()-start<13);
       } catch(error) {
+        trainingFailed = true;
         setTrainingUI(false);
         $('trainingStatus').textContent='Training stopped. Reset the experiment and try again.';
         console.error(error);
         return;
       }
       const epoch=errors.length;
-      $('errorValue').textContent=errors[epoch-1].toFixed(4);
+      $('errorValue').textContent=errors[epoch-1]<0.0001?'< 0.0001':errors[epoch-1].toFixed(4);
       $('progressFill').style.width=`${epoch/target*100}%`;
       $('trainingProgress').setAttribute('aria-valuenow',String(epoch));
       $('trainingStatus').textContent=`Epoch ${epoch.toLocaleString()} of ${target.toLocaleString()} · learning the patterns`;
+      syncLabState();
       drawChart();
       if(epoch<target)requestAnimationFrame(tick);
       else {
@@ -323,7 +369,7 @@
     restoreInput=source.map((value,i)=>i%SIZE<7?value:0);
     updateOutput(restoreInput,`${patterns[selectedPattern].name} with its right half hidden`);
     const canvas=$('outputCanvas');
-    drawPixels(canvas,restoreInput,{colorFn:(value,index)=>index%SIZE>=7?'#d1dbc0':value?colors.green:colors.off});
+    drawPixels(canvas,restoreInput,{colorFn:(value,index)=>index%SIZE>=7?colors.light:value?colors.green:colors.off});
     $('outputTag').textContent='RIGHT HALF HIDDEN';
     $('outputStatus').textContent=trained?'The visible half will stay exactly as you left it.':'Train the model, then restore the missing pixels.';
   }
@@ -336,6 +382,7 @@
     $('samplingPlayer').hidden = true;
     $('temperature').disabled = false;
     $('generateButtonText').textContent = mode === 'dream' ? 'Generate a pattern' : 'Restore the pattern';
+    syncLabState();
   }
 
   function syncPlayback() {
@@ -348,6 +395,7 @@
     $('generateButtonText').textContent = finished
       ? mode === 'dream' ? 'Generate another' : 'Restore again'
       : 'Start a new sample';
+    syncLabState();
   }
 
   function renderSamplingFrame(frame) {

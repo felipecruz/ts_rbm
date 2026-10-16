@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f3eb">
+  <meta name="theme-color" content="#f7f5ef">
   <meta name="description" content="An interactive field guide to generative models. Teach a tiny Restricted Boltzmann Machine, watch it learn, and see what it imagines.">
   <title>A little machine for imagination — Fieldnotes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +30,6 @@
         <div class="eyebrow"><span class="tiny-square"></span> A FIELD GUIDE TO GENERATIVE MACHINES <span class="issue">/ 001</span></div>
         <h1 id="title">A little machine<br>for <em>imagination.</em></h1>
         <p class="hero-deck">What does it mean for a machine to create?<br>Let’s find out with a few pixels, a little probability,<br class="desktop-break"> and a model you can see inside.</p>
-        <a class="button primary hero-cta" href="#experiment">Meet your little machine <span aria-hidden="true">↗</span></a>
         <div class="hero-meta"><span>AN INTERACTIVE ESSAY</span><span class="meta-dot">·</span><span>10 MIN READ + A LITTLE PLAY</span></div>
       </div>
       <figure class="hero-art" aria-label="An illustration of scattered pixels becoming a structured circular pattern">
@@ -71,51 +70,70 @@
 
     <section class="experiment-section wrap" id="experiment" aria-labelledby="lab-title">
       <div class="section-heading"><div><div class="eyebrow">02 / THE EXPERIMENT</div><h2 id="lab-title">An imagination of your own.</h2></div><p>Give it a visual vocabulary.<br> Then see what it makes of it.</p></div>
-      <div class="lab">
-        <header class="lab-header"><div class="lab-name"><span class="status-dot"></span> THE PATTERN LABORATORY <span class="lab-version">RBM / 15 × 15</span></div><button class="text-button light" id="resetButton" type="button"><span aria-hidden="true">↺</span> Reset</button></header>
+      <div class="lab" id="patternLab" data-phase="ready">
+        <header class="lab-header">
+          <div class="lab-identity"><span class="lab-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><div class="lab-name">THE PATTERN LABORATORY</div><p class="lab-subtitle">A small world. A real generative model.</p></div></div>
+          <div class="lab-header-actions"><span class="lab-state" id="labState" data-state="ready"><span class="status-dot" aria-hidden="true"></span><span id="labStateText">Ready to learn</span></span><button class="text-button light" id="resetButton" type="button"><span aria-hidden="true">↺</span> Reset</button></div>
+        </header>
         <div class="lab-columns">
           <section class="lab-panel data-panel" aria-labelledby="data-title">
-            <div class="step-label"><span>01</span> THE EXAMPLES</div><h3 id="data-title">A tiny visual vocabulary.</h3><p class="panel-description">These are the only things your machine will know about the world.</p>
+            <div class="panel-intro"><div class="step-label"><span>01</span> THE EXAMPLES</div><h3 id="data-title">A tiny visual vocabulary.</h3><p class="panel-description">These are the only things your machine will know about the world.</p></div>
             <div class="segmented" id="presetTabs" role="group" aria-label="Training dataset"><button class="active" data-preset="shapes" aria-pressed="true">Shapes</button><button data-preset="letters" aria-pressed="false">Letters</button><button data-preset="bars" aria-pressed="false">Stripes</button></div>
             <div class="training-patterns" id="trainingPatterns" aria-label="Training examples"></div>
-            <button class="button outline add-pattern" id="drawButton" type="button"><span aria-hidden="true">+</span> Draw your own</button>
-            <div class="dataset-footer"><span id="exampleCount">6 EXAMPLES</span><span>225 PIXELS EACH</span></div>
+            <p class="pattern-hint">Select a pattern to imagine its missing half.</p>
+            <div class="panel-actions"><button class="button outline add-pattern" id="drawButton" type="button"><span aria-hidden="true">+</span> Draw your own</button>
+            <div class="dataset-footer"><span id="exampleCount">6 EXAMPLES</span><span>225 PIXELS EACH</span></div></div>
           </section>
           <section class="lab-panel train-panel" aria-labelledby="train-title">
-            <div class="step-label"><span>02</span> THE LEARNING</div><h3 id="train-title">Find the hidden patterns.</h3><p class="panel-description">The machine tries to rebuild its examples, then adjusts its connections.</p>
+            <div class="panel-intro"><div class="step-label"><span>02</span> THE LEARNING</div><h3 id="train-title">Find the hidden patterns.</h3><p class="panel-description">The machine tries to rebuild its examples, then adjusts its connections.</p></div>
             <div class="settings-row"><label>Hidden units<select id="hiddenUnits"><option value="8">8 units</option><option value="16">16 units</option><option value="24" selected>24 units</option><option value="48">48 units</option></select></label><label>Training epochs<select id="epochs"><option value="300">300 passes</option><option value="600" selected>600 passes</option><option value="1200">1,200 passes</option></select></label></div>
-            <div class="chart-heading"><span>RECONSTRUCTION ERROR</span><span id="errorValue">—</span></div>
-            <div class="chart-wrap"><canvas id="errorChart" aria-label="Mean squared reconstruction error over training epochs" role="img"></canvas><span class="chart-empty" id="chartEmpty">Learning leaves a trace.</span></div>
-            <div class="chart-axis"><span>0</span><span id="epochAxis">600 EPOCHS</span></div>
+            <div class="chart-card">
+              <div class="chart-heading"><div><span class="chart-title">Learning trace</span><span class="chart-subtitle">Mean squared error</span></div><output id="errorValue" aria-label="Current reconstruction error" aria-live="off">—</output></div>
+              <div class="chart-wrap"><canvas id="errorChart" aria-label="Mean squared reconstruction error over training epochs" role="img"></canvas><div class="chart-empty" id="chartEmpty"><span class="chart-empty-mark" aria-hidden="true">⌁</span><span>Every example leaves a trace.</span><small>Train the model to watch it learn.</small></div></div>
+              <div class="chart-axis"><span>0</span><span id="epochAxis">600 EPOCHS</span></div>
+            </div>
+            <div class="panel-actions">
             <button class="button primary train-button" id="trainButton" type="button"><span class="play-icon" aria-hidden="true">▶</span><span id="trainButtonText">Train the model</span></button>
+            <div class="training-meter"><span>Training passes</span><output id="epochReadout" aria-live="off">0 / 600</output></div>
             <div class="progress-track" role="progressbar" aria-label="Training progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="600" id="trainingProgress"><span id="progressFill"></span></div>
-            <p class="training-status" id="trainingStatus" role="status">Ready when you are.</p>
+            <p class="training-status" id="trainingStatus" role="status">Ready when you are.</p></div>
           </section>
           <section class="lab-panel imagine-panel" aria-labelledby="imagine-title">
-            <div class="step-label"><span>03</span> THE POSSIBILITIES</div><h3 id="imagine-title">Let it imagine.</h3><p class="panel-description" id="outputDescription">Start with noise. Let the learned relationships guide what comes next.</p>
+            <div class="panel-intro"><div class="step-label"><span>03</span> THE POSSIBILITIES</div><h3 id="imagine-title">Let it imagine.</h3><p class="panel-description" id="outputDescription">Start with noise. Let the learned relationships guide what comes next.</p></div>
             <div class="segmented output-tabs" role="group" aria-label="Experiment mode"><button data-mode="dream" class="active" aria-pressed="true">Generate</button><button data-mode="restore" aria-pressed="false">Restore</button></div>
-            <div class="output-stage"><canvas id="outputCanvas" width="300" height="300" role="img" aria-label="Untrained random pixel pattern"></canvas><span class="output-tag" id="outputTag">BEFORE LEARNING</span></div>
-            <div class="sampling-player" id="samplingPlayer" hidden aria-label="Generation playback">
-              <div class="sampling-heading"><span id="samplingState">IMAGINING</span><span id="samplingStep">STEP 000 / 100</span></div>
-              <div class="sampling-progress" id="samplingProgress" role="progressbar" aria-label="Sampling progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="samplingFill"></span></div>
+            <div class="output-stage"><div class="pixel-stage"><span class="stage-corner top-left" aria-hidden="true"></span><span class="stage-corner top-right" aria-hidden="true"></span><canvas id="outputCanvas" width="300" height="300" role="img" aria-label="Untrained random pixel pattern"></canvas><span class="stage-corner bottom-left" aria-hidden="true"></span><span class="stage-corner bottom-right" aria-hidden="true"></span></div><span class="output-tag" id="outputTag">BEFORE LEARNING</span></div>
+            <div class="randomness-control" id="randomnessControl"><label for="temperature">Randomness <span id="temperatureValue">1.0</span></label><input type="range" id="temperature" min="0.5" max="1.5" step="0.1" value="1" aria-describedby="temperatureHint"><div class="range-labels" id="temperatureHint"><span>Familiar</span><span>Unexpected</span></div></div>
+            <div class="restore-control" id="restoreControl" hidden><p>Choose an example on the left. We’ll hide its right half and ask the model to fill it in.</p><button class="text-button" id="damageButton" type="button">Hide the right half again <span aria-hidden="true">↺</span></button></div>
+            <div class="panel-actions"><button class="button generate-button" id="generateButton" type="button" disabled><span aria-hidden="true">✳</span><span id="generateButtonText">Generate a pattern</span></button>
+            <p class="output-status" id="outputStatus" role="status">First, teach your machine a few patterns.</p></div>
+          </section>
+        </div>
+        <div class="lab-playback">
+          <div class="sampling-idle">
+            <div class="trace-intro"><span class="trace-kicker">THE GENERATION TRACE</span><h4>From noise to possibility.</h4><p>Follow the first 100 steps of a sample.</p></div>
+            <div class="trace-placeholders" aria-hidden="true"><div><span>·</span><small>Noise</small></div><div><span>·</span><small>Step 1</small></div><div><span>·</span><small>Step 10</small></div><div><span>·</span><small>Step 100</small></div></div>
+            <p class="trace-idle-note">A sample’s story will appear here.<span>Play it. Pause it. Look a little closer.</span></p>
+          </div>
+          <div class="sampling-player" id="samplingPlayer" hidden aria-label="Generation playback">
+            <div class="trace-intro"><span class="trace-kicker" id="samplingState">IMAGINING</span><h4>From noise to possibility.</h4><p class="sampling-caption">Each step: pixels → hidden units → pixels.</p></div>
+            <div class="trace-film">
               <div class="sampling-history" aria-label="Snapshots from this sampling chain">
-                <figure><canvas id="sampleFrame0" width="90" height="90" role="img" aria-label="Initial noise"></canvas><figcaption>Noise</figcaption></figure>
-                <figure><canvas id="sampleFrame1" width="90" height="90" role="img" aria-label="Step 1, not reached yet"></canvas><figcaption>Step 1</figcaption></figure>
-                <figure><canvas id="sampleFrame10" width="90" height="90" role="img" aria-label="Step 10, not reached yet"></canvas><figcaption>Step 10</figcaption></figure>
-                <figure><canvas id="sampleFrame100" width="90" height="90" role="img" aria-label="Step 100, not reached yet"></canvas><figcaption>Step 100</figcaption></figure>
+                <figure><canvas id="sampleFrame0" width="60" height="60" role="img" aria-label="Initial noise"></canvas><figcaption>Noise</figcaption></figure>
+                <figure><canvas id="sampleFrame1" width="60" height="60" role="img" aria-label="Step 1, not reached yet"></canvas><figcaption>Step 1</figcaption></figure>
+                <figure><canvas id="sampleFrame10" width="60" height="60" role="img" aria-label="Step 10, not reached yet"></canvas><figcaption>Step 10</figcaption></figure>
+                <figure><canvas id="sampleFrame100" width="60" height="60" role="img" aria-label="Step 100, not reached yet"></canvas><figcaption>Step 100</figcaption></figure>
               </div>
+            </div>
+            <div class="trace-controls">
+              <div class="sampling-heading"><span>Sampling progress</span><span id="samplingStep">STEP 000 / 100</span></div>
+              <div class="sampling-progress" id="samplingProgress" role="progressbar" aria-label="Sampling progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="samplingFill"></span></div>
               <div class="sampling-actions">
                 <button type="button" class="sampling-button" id="playbackButton">Pause</button>
                 <button type="button" class="sampling-button" id="stepButton" disabled>Step <span aria-hidden="true">→</span></button>
                 <select id="playbackSpeed" aria-label="Playback speed"><option value="0.5">0.5× speed</option><option value="1" selected>1× speed</option><option value="2">2× speed</option></select>
               </div>
-              <p class="sampling-caption">Each step: pixels → hidden units → pixels.</p>
             </div>
-            <div class="randomness-control" id="randomnessControl"><label for="temperature">Randomness <span id="temperatureValue">1.0</span></label><input type="range" id="temperature" min="0.5" max="1.5" step="0.1" value="1" aria-describedby="temperatureHint"><div class="range-labels" id="temperatureHint"><span>Familiar</span><span>Unexpected</span></div></div>
-            <div class="restore-control" id="restoreControl" hidden><p>Choose an example on the left. We’ll hide its right half and ask the model to fill it in.</p><button class="text-button" id="damageButton" type="button">Hide the right half again <span aria-hidden="true">↺</span></button></div>
-            <button class="button generate-button" id="generateButton" type="button" disabled><span aria-hidden="true">✳</span><span id="generateButtonText">Generate a pattern</span></button>
-            <p class="output-status" id="outputStatus" role="status">First, teach your machine a few patterns.</p>
-          </section>
+          </div>
         </div>
         <footer class="lab-footer"><span><span class="tiny-status"></span> Real learning, right here in your browser.</span><a href="#inside">See what’s happening inside <span aria-hidden="true">↓</span></a></footer>
       </div>
@@ -153,7 +171,22 @@
           <p>Imagine a hidden unit listening to the drawing. Each lit pixel contributes a vote through its connection. A positive weight pushes the unit toward “on”; a negative weight pushes it toward “off.” The unit also has a <strong>bias</strong>: a starting preference before the pixels vote.</p>
           <p>The little weight map below makes those votes visible. Pick a hidden unit after training. You’re looking at its 225 connections, one for every square in the drawing. A unit may respond to a mixture of features; it doesn’t have to stand for a named shape.</p>
         </div>
-        <div class="feature-inspector"><div class="feature-copy"><div class="eyebrow">A WINDOW INTO YOUR MODEL</div><h3>What does a hidden unit see?</h3><p>Select a unit to inspect its connections. A lit pixel with a green weight encourages this unit to turn on; an orange weight discourages it.</p><div id="hiddenUnitButtons" class="hidden-unit-buttons" role="group" aria-label="Choose a hidden unit"></div><span class="feature-status" id="featureStatus">Train the model to reveal its connections.</span></div><div class="feature-visual"><canvas id="featureCanvas" width="225" height="225" role="img" aria-label="Hidden unit weights, available after training"></canvas><div class="weight-legend"><span>−</span><span></span><span>+</span></div></div></div>
+        <div class="feature-inspector">
+          <div class="feature-copy">
+            <div class="eyebrow">A WINDOW INTO YOUR MODEL</div>
+            <h3>What does a hidden unit see?</h3>
+            <p>Select a unit to inspect its 225 connections, one for each pixel.</p>
+            <p class="feature-hint" id="weightMapHint"><strong>Why these colors?</strong> The drawings show on/off pixels. Here, colors show a pixel’s influence on the hidden unit: <span class="weight-positive">green encourages it to turn on (+)</span>, <span class="weight-negative">copper discourages it (−)</span>, and pale cream means little influence. These effects apply when that pixel is on.</p>
+            <p class="weight-scale-note" id="weightScaleHint">Richer color means a stronger connection. Each unit uses its own color scale.</p>
+            <div id="hiddenUnitButtons" class="hidden-unit-buttons" role="group" aria-label="Choose a hidden unit"></div>
+            <span class="feature-status" id="featureStatus">Train the model to reveal its connections.</span>
+          </div>
+          <div class="feature-visual">
+            <canvas id="featureCanvas" width="225" height="225" role="img" aria-label="Hidden unit weights, available after training" aria-describedby="weightMapHint weightScaleHint"></canvas>
+            <div class="weight-legend" aria-hidden="true"><span>−</span><span></span><span>+</span></div>
+            <div class="weight-legend-labels" aria-hidden="true"><span>Copper</span><span>≈ 0</span><span>Green</span></div>
+          </div>
+        </div>
 
         <div class="math-passage" id="evidence-to-probability">
           <div class="eyebrow">NOW, WRITE DOWN THE IDEA</div>
