@@ -8,7 +8,7 @@
     if (!fallbacks.has(element)) fallbacks.set(element, element.textContent);
     if (!window.katex) {
       if (!warnedUnavailable) {
-        console.warn('[Fieldnotes] Math rendering is unavailable; the written formulas remain readable. Run npm run build to prepare the local math assets.');
+        console.warn('[Generative AI intuition] Math rendering is unavailable; the written formulas remain readable. Run npm run build to prepare the local math assets.');
         warnedUnavailable = true;
       }
       return;
@@ -25,7 +25,7 @@
       element.innerHTML = rendered;
     } catch (error) {
       element.textContent = fallbacks.get(element);
-      console.warn('[Fieldnotes] A formula could not render; its written explanation is shown.', error);
+      console.warn('[Generative AI intuition] A formula could not render; its written explanation is shown.', error);
     }
   }
 

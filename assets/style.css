@@ -106,10 +106,14 @@ strong {
 }
 .brand-icon {
   display:grid;
+  flex-shrink:0;
   grid-template-columns:repeat(2,6px);
   gap:3px;
   margin-right:12px;
   transform:rotate(-12deg)
+}
+.brand-name {
+  white-space:nowrap
 }
 .brand-icon i {
   height:6px;
@@ -957,9 +961,6 @@ nav span {
 .site-footer .brand {
   font-size:21px
 }
-.footer-dot {
-  color:var(--orange)
-}
 .site-footer>span {
   font-size:9px;
   color:var(--muted)
@@ -1204,10 +1205,15 @@ dialog>p {
     width:calc(100% - 36px)
   }
   .site-header {
-    height:70px
+    height:auto;
+    min-height:70px;
+    flex-wrap:wrap;
+    gap:12px 20px;
+    padding-block:16px
   }
   .brand {
-    font-size:24px
+    font-size:22px;
+    letter-spacing:-.8px
   }
   nav a:first-child,nav a:last-child {
     display:none
