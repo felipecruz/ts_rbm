@@ -1823,3 +1823,31 @@ dialog>p {
   .restoration-trace .sampling-history canvas { width:32px; height:32px; }
   .restoration-trace .prediction-live canvas { width:54px; height:54px; }
 }
+
+/* The language selector stays available alongside the compact mobile navigation. */
+.site-header { height:auto; min-height:96px; padding-block:20px; gap:16px 24px; flex-wrap:wrap; }
+.header-tools { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+.language-switch select { background:transparent; border:1px solid var(--line); border-radius:5px; color:var(--green); padding:9px 28px 9px 11px; font:inherit; font-size:11px; cursor:pointer; max-width:160px; }
+.visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+html:lang(pt-BR) .hero h1 { font-size:clamp(60px,6.2vw,88px); }
+html:lang(pt-BR) .site-header .brand-sub,html:lang(pt-BR) .site-header .brand-divider { display:none; }
+@media(max-width:1100px) {
+  .header-tools { gap:20px; }
+}
+@media(max-width:760px) {
+  .site-header { min-height:70px; padding-block:16px; }
+  .header-tools { width:100%; justify-content:space-between; }
+  html:lang(pt-BR) .site-header .brand { font-size:20px; letter-spacing:-.7px; }
+  html:lang(pt-BR) .hero h1 { font-size:clamp(45px,12vw,70px); letter-spacing:-1.3px; }
+}
+@media(max-width:380px) {
+  html:lang(pt-BR) .site-header .brand { font-size:18px; }
+  html:lang(pt-BR) .site-footer .brand { font-size:18px; }
+}
+html:lang(pt-BR) .closing>div { min-width:0; }
+html:lang(pt-BR) .issue { white-space:nowrap; flex-shrink:0; }
+html:lang(pt-BR) .settings-row { align-items:flex-end; }
+@media(max-width:380px) {
+  html:lang(pt-BR) .settings-row { flex-direction:column; }
+  html:lang(pt-BR) .settings-row label { width:100%; }
+}

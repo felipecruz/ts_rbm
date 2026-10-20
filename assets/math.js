@@ -15,7 +15,7 @@
     }
     try {
       // Render before replacing the fallback, so even an unexpected error leaves it intact.
-      const rendered = window.katex.renderToString(element.dataset.tex, {
+      const rendered = window.katex.renderToString(window.I18n ? window.I18n.tex(element.dataset.tex) : element.dataset.tex, {
         displayMode: element.dataset.display === 'true',
         output: 'htmlAndMathml',
         throwOnError: true,

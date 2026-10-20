@@ -1,6 +1,7 @@
 'use strict';
 
 (() => {
+  const { t, number: formatNumber, locale } = I18n;
   const $ = id => document.getElementById(id);
   const SIZE = PlaygroundData.size;
   const PIXELS = SIZE * SIZE;
@@ -146,7 +147,7 @@
       const button = document.createElement('button');
       button.className = `pattern-button${index===selectedPattern ? ' selected' : ''}`;
       button.type = 'button';
-      button.setAttribute('aria-label', `Select ${pattern.name}${mode==='restore' ? ' to restore' : ' pattern'}`);
+      button.setAttribute('aria-label', mode==='restore' ? t`Select ${pattern.name} to restore` : t`Select ${pattern.name} pattern`);
       button.setAttribute('aria-pressed', String(index===selectedPattern));
       const label = document.createElement('span');
       label.textContent = pattern.name;
@@ -165,7 +166,7 @@
     });
     $('trainingPatterns').replaceChildren(...nodes);
     if (hadFocus) nodes[selectedPattern].focus({preventScroll:true});
-    $('exampleCount').textContent = `${patterns.length} EXAMPLES`;
+    $('exampleCount').textContent = t`${patterns.length} EXAMPLES`;
     $('drawButton').disabled = patterns.length >= 18 || training;
   }
 
@@ -207,9 +208,9 @@
       button.type='button';
       button.className = `unit-button${index===selectedUnit ? ' selected':''}`;
       button.disabled=!trained;
-      button.setAttribute('aria-label',`Inspect hidden unit ${index+1}`);
+      button.setAttribute('aria-label',t`Inspect hidden unit ${index+1}`);
       button.setAttribute('aria-pressed',String(index===selectedUnit));
-      button.title=`Hidden unit ${index+1}`;
+      button.title=t`Hidden unit ${index+1}`;
       if (trained) button.style.background = blendColors(colors.off, colors.green, activations[index] || 0);
       button.addEventListener('click',()=> {selectedUnit=index;renderUnits();});
       return button;
@@ -218,7 +219,7 @@
     if (hadFocus && trained) nodes[selectedUnit].focus({preventScroll:true});
     if (!trained || !model) {
       drawPixels($('featureCanvas'),Array(PIXELS).fill(0));
-      $('featureStatus').textContent='Train the model to reveal its connections.';
+      $('featureStatus').textContent=t('Train the model to reveal its connections.');
       return;
     }
     const weights = model.weights.col(selectedUnit).values;
@@ -227,33 +228,33 @@
       const strength = Math.min(1,Math.abs(value)/max);
       return blendColors(colors.paper, value >= 0 ? colors.green : colors.orange, strength);
     }});
-    $('featureStatus').textContent=`Unit ${selectedUnit+1} of ${count} · color scaled to this unit’s strongest weight`;
-    $('featureCanvas').setAttribute('aria-label',`Signed connection weights for hidden unit ${selectedUnit+1}`);
+    $('featureStatus').textContent=t`Unit ${selectedUnit+1} of ${count} · color scaled to this unit’s strongest weight`;
+    $('featureCanvas').setAttribute('aria-label',t`Signed connection weights for hidden unit ${selectedUnit+1}`);
   }
 
   function syncLabState() {
     let state = 'ready';
-    let label = 'Ready to learn';
+    let label = t('Ready to learn');
     if (training) {
       state = 'learning';
-      label = 'Learning';
+      label = t('Learning');
     } else if (sampling && sampling.step < SAMPLING_STEPS) {
       state = sampling.playing ? 'sampling' : 'paused';
-      label = sampling.playing ? sampling.mode === 'restore' ? 'Tracing restoration' : 'Imagining' : 'Sampling paused';
+      label = sampling.playing ? sampling.mode === 'restore' ? t('Tracing restoration') : t('Imagining') : t('Sampling paused');
     } else if (trainingFailed) {
       state = 'paused';
-      label = 'Training stopped';
+      label = t('Training stopped');
     } else if (!sampling && model && errors.length > 0 && errors.length < Number($('epochs').value)) {
       state = 'paused';
-      label = 'Training paused';
+      label = t('Training paused');
     } else if (trained) {
       state = 'trained';
-      label = 'Ready to imagine';
+      label = t('Ready to imagine');
     }
     $('labState').dataset.state = state;
     $('labStateText').textContent = label;
     $('patternLab').dataset.phase = state;
-    $('epochReadout').textContent = `${errors.length.toLocaleString()} / ${Number($('epochs').value).toLocaleString()}`;
+    $('epochReadout').textContent = `${errors.length.toLocaleString(locale)} / ${Number($('epochs').value).toLocaleString(locale)}`;
   }
 
   function setTrainingUI(active) {
@@ -262,7 +263,7 @@
     document.querySelectorAll('[data-preset], #hiddenUnits, #epochs').forEach(el=>el.disabled=active);
     $('drawButton').disabled=active || patterns.length>=18;
     $('generateButton').disabled=active || !trained;
-    $('trainButtonText').textContent=active?'Pause training':trained?'Train again':'Train the model';
+    $('trainButtonText').textContent=active?t('Pause training'):trained?t('Train again'):t('Train the model');
     $('trainButton').querySelector('.play-icon').textContent=active?'Ⅱ':'▶';
     syncLabState();
   }
@@ -275,13 +276,13 @@
     $('progressFill').style.width='0%';
     $('trainingProgress').setAttribute('aria-valuenow','0');
     $('trainingProgress').setAttribute('aria-valuemax',$('epochs').value);
-    $('trainingStatus').textContent='Ready when you are.';
+    $('trainingStatus').textContent=t('Ready when you are.');
     $('errorValue').textContent='—';
-    $('epochAxis').textContent=`${Number($('epochs').value).toLocaleString()} EPOCHS`;
+    $('epochAxis').textContent=t`${Number($('epochs').value).toLocaleString(locale)} EPOCHS`;
     $('chartEmpty').hidden=false;
-    $('outputTag').textContent='BEFORE LEARNING';
-    $('outputStatus').textContent='First, teach your machine a few patterns.';
-    updateOutput(noise(),'Untrained random pixel pattern');
+    $('outputTag').textContent=t('BEFORE LEARNING');
+    $('outputStatus').textContent=t('First, teach your machine a few patterns.');
+    updateOutput(noise(),t('Untrained random pixel pattern'));
     drawChart();renderUnits();
     if(mode==='restore')prepareRestore();
   }
@@ -289,7 +290,7 @@
   function setPreset(id) {
     presetId=id;
     const preset=PlaygroundData.presets.find(item=>item.id===id);
-    patterns=preset.patterns.map(pattern=>({name:pattern.name,pixels:pattern.pixels.slice()}));
+    patterns=preset.patterns.map(pattern=>({name:t(pattern.name),pixels:pattern.pixels.slice()}));
     selectedPattern=0;
     document.querySelectorAll('[data-preset]').forEach(button=>{const active=button.dataset.preset===id;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
     renderPatterns();resetModel();
@@ -301,10 +302,10 @@
       trainingToken++;
       trained=errors.length>0;
       setTrainingUI(false);
-      $('trainButtonText').textContent='Continue training';
-      $('trainingStatus').textContent=`Paused at epoch ${errors.length}. Continue when you’re ready.`;
-      $('outputTag').textContent='TRAINING PAUSED';
-      $('outputStatus').textContent='Try the partly trained model, or continue learning.';
+      $('trainButtonText').textContent=t('Continue training');
+      $('trainingStatus').textContent=t`Paused at epoch ${errors.length}. Continue when you’re ready.`;
+      $('outputTag').textContent=t('TRAINING PAUSED');
+      $('outputStatus').textContent=t('Try the partly trained model, or continue learning.');
       renderUnits();
       return;
     }
@@ -319,9 +320,9 @@
     const token=++trainingToken;
     $('chartEmpty').hidden=true;
     setTrainingUI(true);
-    $('trainingStatus').textContent='Finding relationships between pixels…';
-    $('outputStatus').textContent='Learning a little more with every pass.';
-    $('outputTag').textContent='LEARNING IN PROGRESS';
+    $('trainingStatus').textContent=t('Finding relationships between pixels…');
+    $('outputStatus').textContent=t('Learning a little more with every pass.');
+    $('outputTag').textContent=t('LEARNING IN PROGRESS');
     const tick=()=> {
       if(token!==trainingToken)return;
       const start=performance.now();
@@ -330,25 +331,25 @@
       } catch(error) {
         trainingFailed = true;
         setTrainingUI(false);
-        $('trainingStatus').textContent='Training stopped. Reset the experiment and try again.';
+        $('trainingStatus').textContent=t('Training stopped. Reset the experiment and try again.');
         console.error(error);
         return;
       }
       const epoch=errors.length;
-      $('errorValue').textContent=errors[epoch-1]<0.0001?'< 0.0001':errors[epoch-1].toFixed(4);
+      $('errorValue').textContent=errors[epoch-1]<0.0001?`< ${formatNumber(0.0001,4)}`:formatNumber(errors[epoch-1],4);
       $('progressFill').style.width=`${epoch/target*100}%`;
       $('trainingProgress').setAttribute('aria-valuenow',String(epoch));
-      $('trainingStatus').textContent=`Epoch ${epoch.toLocaleString()} of ${target.toLocaleString()} · learning the patterns`;
+      $('trainingStatus').textContent=t`Epoch ${epoch.toLocaleString(locale)} of ${target.toLocaleString(locale)} · learning the patterns`;
       syncLabState();
       drawChart();
       if(epoch<target)requestAnimationFrame(tick);
       else {
         trained=true;
         setTrainingUI(false);
-        $('trainingStatus').textContent=`${target.toLocaleString()} epochs complete. A little world, learned.`;
+        $('trainingStatus').textContent=t`${target.toLocaleString(locale)} epochs complete. A little world, learned.`;
         renderUnits();
         if(mode==='dream')generate();
-        else {prepareRestore();$('outputStatus').textContent='Ready to imagine the missing half.';}
+        else {prepareRestore();$('outputStatus').textContent=t('Ready to imagine the missing half.');}
       }
     };
     requestAnimationFrame(tick);
@@ -359,19 +360,19 @@
     document.querySelectorAll('[data-mode]').forEach(button=>{const active=button.dataset.mode===mode;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
     $('randomnessControl').hidden=mode!=='dream';
     $('restoreControl').hidden=mode!=='restore';
-    $('generateButtonText').textContent=mode==='dream'?'Generate a pattern':'Restore the pattern';
-    $('outputDescription').textContent=mode==='dream'?'Start with noise. Let the learned relationships guide what comes next.':'Keep half the picture. Ask the model to imagine what’s missing.';
+    $('generateButtonText').textContent=mode==='dream'?t('Generate a pattern'):t('Restore the pattern');
+    $('outputDescription').textContent=mode==='dream'?t('Start with noise. Let the learned relationships guide what comes next.'):t('Keep half the picture. Ask the model to imagine what’s missing.');
   }
 
   function prepareRestore() {
     cancelSampling();
     const source=patterns[selectedPattern].pixels;
     restoreInput=source.map((value,i)=>i%SIZE<7?value:0);
-    updateOutput(restoreInput,`${patterns[selectedPattern].name} with its right half hidden`);
+    updateOutput(restoreInput,t`${patterns[selectedPattern].name} with its right half hidden`);
     const canvas=$('outputCanvas');
     drawPixels(canvas,restoreInput,{colorFn:(value,index)=>index%SIZE>=7?colors.light:value?colors.green:colors.off});
-    $('outputTag').textContent='RIGHT HALF HIDDEN';
-    $('outputStatus').textContent=trained?'The visible half will stay exactly as you left it.':'Train the model, then restore the missing pixels.';
+    $('outputTag').textContent=t('RIGHT HALF HIDDEN');
+    $('outputStatus').textContent=trained?t('The visible half will stay exactly as you left it.'):t('Train the model, then restore the missing pixels.');
   }
 
   function cancelSampling() {
@@ -382,55 +383,55 @@
     $('samplingPlayer').hidden = true;
     $('watchRestoration').hidden = true;
     $('temperature').disabled = false;
-    $('generateButtonText').textContent = mode === 'dream' ? 'Generate a pattern' : 'Restore the pattern';
+    $('generateButtonText').textContent = mode === 'dream' ? t('Generate a pattern') : t('Restore the pattern');
     syncLabState();
   }
 
   function syncPlayback() {
     if (!sampling) return;
     const finished = sampling.step === SAMPLING_STEPS;
-    $('samplingState').textContent = finished ? 'CHAIN COMPLETE' : sampling.playing ? sampling.mode === 'restore' ? 'HOW IT FORMED' : 'IMAGINING' : 'PAUSED';
-    $('playbackButton').textContent = finished ? 'Replay' : sampling.playing ? 'Pause' : 'Play';
+    $('samplingState').textContent = finished ? t('CHAIN COMPLETE') : sampling.playing ? sampling.mode === 'restore' ? t('HOW IT FORMED') : t('IMAGINING') : t('PAUSED');
+    $('playbackButton').textContent = finished ? t('Replay') : sampling.playing ? t('Pause') : t('Play');
     $('stepButton').disabled = finished || sampling.playing;
     $('temperature').disabled = !finished;
     $('generateButtonText').textContent = finished
-      ? mode === 'dream' ? 'Generate another' : 'Restore again'
-      : 'Start a new sample';
+      ? mode === 'dream' ? t('Generate another') : t('Restore again')
+      : t('Start a new sample');
     syncLabState();
   }
 
   function renderSamplingFrame(frame) {
     sampling.step = frame.step;
     const label = sampling.mode === 'restore'
-      ? `${sampling.patternName} completion, step ${frame.step}; original left half preserved`
-      : `Generated sample ${sampling.number}, Gibbs step ${frame.step} of ${SAMPLING_STEPS}`;
+      ? t`${sampling.patternName} completion, step ${frame.step}; original left half preserved`
+      : t`Generated sample ${sampling.number}, Gibbs step ${frame.step} of ${SAMPLING_STEPS}`;
     const framePixels = frame.visible.array();
     if (sampling.mode === 'restore') {
       drawPixels($('predictionFrame'), framePixels);
       $('predictionFrame').setAttribute('aria-label', label);
-      $('predictionStep').textContent = `Step ${frame.step} · now`;
+      $('predictionStep').textContent = t`Step ${frame.step} · now`;
     } else {
       updateOutput(framePixels, label);
     }
-    $('samplingStep').textContent = `STEP ${String(frame.step).padStart(3, '0')} / ${SAMPLING_STEPS}`;
+    $('samplingStep').textContent = t`STEP ${String(frame.step).padStart(3, '0')} / ${SAMPLING_STEPS}`;
     $('samplingProgress').setAttribute('aria-valuenow', String(frame.step));
     $('samplingFill').style.width = `${frame.step / SAMPLING_STEPS * 100}%`;
     if (SNAPSHOT_STEPS.includes(frame.step)) {
       const canvas = $(`sampleFrame${frame.step}`);
       drawPixels(canvas, framePixels);
       const frameLabel = frame.step === 0
-        ? sampling.mode === 'restore' ? 'Known pixels plus random noise' : 'Initial noise'
-        : `Step ${frame.step}`;
-      canvas.setAttribute('aria-label', `${frameLabel} from this ${sampling.mode === 'restore' ? 'completion' : 'generation'}`);
+        ? sampling.mode === 'restore' ? t('Known pixels plus random noise') : t('Initial noise')
+        : t`Step ${frame.step}`;
+      canvas.setAttribute('aria-label', t`${frameLabel} from this ${sampling.mode === 'restore' ? t('completion') : t('generation')}`);
       canvas.parentElement.classList.add('captured');
     }
     if (sampling.mode === 'restore') {
-      $('outputTag').textContent = 'FINAL SAMPLE · 100 STEPS';
+      $('outputTag').textContent = t('FINAL SAMPLE · 100 STEPS');
       return;
     }
     $('outputTag').textContent = frame.step === 0
-      ? 'STARTING FROM RANDOM NOISE'
-      : `SAMPLE ${String(sampling.number).padStart(3, '0')} / GIBBS SAMPLING`;
+      ? t('STARTING FROM RANDOM NOISE')
+      : t`SAMPLE ${String(sampling.number).padStart(3, '0')} / GIBBS SAMPLING`;
   }
 
   function finishSampling() {
@@ -439,14 +440,14 @@
     sampling.playing = false;
     syncPlayback();
     if (sampling.mode === 'restore') {
-      $('outputTag').textContent = 'FINAL SAMPLE · 100 STEPS';
-      $('outputStatus').textContent = '100 steps. Left half preserved; right half sampled.';
+      $('outputTag').textContent = t('FINAL SAMPLE · 100 STEPS');
+      $('outputStatus').textContent = t('100 steps. Left half preserved; right half sampled.');
     } else {
-      $('outputTag').textContent = `SAMPLE ${String(sampling.number).padStart(3, '0')} / 100 STEPS`;
+      $('outputTag').textContent = t`SAMPLE ${String(sampling.number).padStart(3, '0')} / 100 STEPS`;
       const closest = Math.min(...patterns.map(pattern => pattern.pixels.reduce((total, value, i) => total + (value !== outputPixels[i] ? 1 : 0), 0)));
       $('outputStatus').textContent = closest === 0
-        ? 'This sample matches a learned example. Try another.'
-        : `${closest} of 225 pixels differ from the closest example.`;
+        ? t('This sample matches a learned example. Try another.')
+        : t`${closest} of 225 pixels differ from the closest example.`;
     }
   }
 
@@ -482,17 +483,17 @@
     if (!sampling) return;
     if (sampling.step === SAMPLING_STEPS) {
       $('temperature').value = String(sampling.temperature);
-      $('temperatureValue').textContent = sampling.temperature.toFixed(1);
+      $('temperatureValue').textContent = formatNumber(sampling.temperature,1);
       renderSamplingFrame(sampling.frames[0]);
       sampling.playing = true;
-      $('outputStatus').textContent = 'Replaying the same sample, from its original noise.';
+      $('outputStatus').textContent = t('Replaying the same sample, from its original noise.');
     } else {
       sampling.playing = !sampling.playing;
       $('outputStatus').textContent = sampling.playing
-        ? 'Each update is a real sample. Patterns can settle, shift, or return.'
-        : `Paused at step ${sampling.step}. Use Step to inspect the next change.`;
+        ? t('Each update is a real sample. Patterns can settle, shift, or return.')
+        : t`Paused at step ${sampling.step}. Use Step to inspect the next change.`;
     }
-    if (sampling.mode === 'restore') $('outputStatus').textContent = 'The final sample stays above. Playback below follows its original prediction steps.';
+    if (sampling.mode === 'restore') $('outputStatus').textContent = t('The final sample stays above. Playback below follows its original prediction steps.');
     syncPlayback();
     scheduleSampling();
   }
@@ -514,24 +515,24 @@
       const canvas = $(`sampleFrame${step}`);
       drawPixels(canvas, Array(PIXELS).fill(0));
       canvas.parentElement.classList.remove('captured');
-      canvas.setAttribute('aria-label', `Step ${step}, not reached yet`);
+      canvas.setAttribute('aria-label', t`Step ${step}, not reached yet`);
     }
     const restoring = mode === 'restore';
     $('samplingPlayer').classList.toggle('restoration-trace', restoring);
-    $('samplingPlayer').setAttribute('aria-label', restoring ? 'Restoration evolution playback' : 'Generation playback');
+    $('samplingPlayer').setAttribute('aria-label', restoring ? t('Restoration evolution playback') : t('Generation playback'));
     $('predictionLive').hidden = !restoring;
     $('watchRestoration').hidden = !restoring;
-    $('samplingTitle').textContent = restoring ? 'Watch the missing half emerge.' : 'From noise to possibility.';
+    $('samplingTitle').textContent = restoring ? t('Watch the missing half emerge.') : t('From noise to possibility.');
     $('samplingCaption').textContent = restoring
-      ? 'The result is above. Here is the actual path from noise to that sample; the left half stays fixed.'
-      : 'Each step: pixels → hidden units → pixels.';
-    $('sampleFrame0').nextElementSibling.textContent = mode === 'restore' ? 'Start' : 'Noise';
+      ? t('The result is above. Here is the actual path from noise to that sample; the left half stays fixed.')
+      : t('Each step: pixels → hidden units → pixels.');
+    $('sampleFrame0').nextElementSibling.textContent = mode === 'restore' ? t('Start') : t('Noise');
     $('samplingPlayer').hidden = false;
     // Compute restoration once, then play those exact frames while its result stays visible.
     if (restoring) {
       sampling.frames = Array.from(iterator);
       updateOutput(sampling.frames[SAMPLING_STEPS].visible.array(),
-        `${sampling.patternName}: final restoration after 100 steps; original left half preserved`);
+        t`${sampling.patternName}: final restoration after 100 steps; original left half preserved`);
     } else {
       sampling.frames.push(iterator.next().value);
     }
@@ -539,10 +540,10 @@
     renderSamplingFrame(initial);
     syncPlayback();
     $('outputStatus').textContent = motionPreference.matches
-      ? 'Motion is reduced. Use Step, or choose Play to watch the chain.'
+      ? t('Motion is reduced. Use Step, or choose Play to watch the chain.')
       : mode === 'restore'
-        ? 'Your completed sample is ready. Watch how the missing half formed below.'
-        : 'Watch the noise evolve. Each update is one real sampling step.';
+        ? t('Your completed sample is ready. Watch how the missing half formed below.')
+        : t('Watch the noise evolve. Each update is one real sampling step.');
     scheduleSampling();
   }
 
@@ -551,7 +552,7 @@
       const button=document.createElement('button');
       button.type='button';button.className=`draw-pixel${drawing[index]?' on':''}`;
       button.dataset.pixel=String(index);
-      button.setAttribute('aria-label',`Row ${Math.floor(index/SIZE)+1}, column ${index%SIZE+1}, ${drawing[index]?'on':'off'}`);
+      button.setAttribute('aria-label',t`Row ${Math.floor(index/SIZE)+1}, column ${index%SIZE+1}, ${drawing[index]?t('on'):t('off')}`);
       button.setAttribute('aria-pressed',String(!!drawing[index]));
       button.tabIndex=index===rovingIndex?0:-1;
       return button;
@@ -563,8 +564,8 @@
     const pixel=$('drawingGrid').children[index];
     pixel.classList.toggle('on',!!paintValue);
     pixel.setAttribute('aria-pressed',String(!!paintValue));
-    pixel.setAttribute('aria-label',`Row ${Math.floor(index/SIZE)+1}, column ${index%SIZE+1}, ${paintValue?'on':'off'}`);
-    $('drawingHint').textContent='Arrow keys move. Space toggles a pixel.';
+    pixel.setAttribute('aria-label',t`Row ${Math.floor(index/SIZE)+1}, column ${index%SIZE+1}, ${paintValue?t('on'):t('off')}`);
+    $('drawingHint').textContent=t('Arrow keys move. Space toggles a pixel.');
   }
   $('drawingGrid').addEventListener('pointerdown',event=>{
     const pixel=event.target.closest('[data-pixel]');if(!pixel)return;
@@ -594,25 +595,25 @@
   });
   $('drawButton').addEventListener('click',()=>{
     drawing=Array(PIXELS).fill(0);rovingIndex=0;renderDrawing();
-    $('drawingHint').textContent='Arrow keys move. Space toggles a pixel.';
+    $('drawingHint').textContent=t('Arrow keys move. Space toggles a pixel.');
     $('drawDialog').showModal();
   });
   $('clearDrawing').addEventListener('click',()=>{drawing.fill(0);renderDrawing();});
   $('saveDrawing').addEventListener('click',()=>{
-    if(!drawing.some(Boolean)){$('drawingHint').textContent='Add a few pixels before saving your pattern.';return;}
-    if(patterns.some(pattern=>pattern.pixels.every((value,i)=>value===drawing[i]))){$('drawingHint').textContent='This pattern is already in the examples. Try something new.';return;}
+    if(!drawing.some(Boolean)){$('drawingHint').textContent=t('Add a few pixels before saving your pattern.');return;}
+    if(patterns.some(pattern=>pattern.pixels.every((value,i)=>value===drawing[i]))){$('drawingHint').textContent=t('This pattern is already in the examples. Try something new.');return;}
     const customCount=patterns.filter(pattern=>pattern.custom).length;
-    patterns.push({name:`Yours ${customCount+1}`,pixels:drawing.slice(),custom:true});
+    patterns.push({name:t`Yours ${customCount+1}`,pixels:drawing.slice(),custom:true});
     selectedPattern=patterns.length-1;renderPatterns();resetModel();
     $('drawDialog').close();
-    $('trainingStatus').textContent='New example added. Train to learn your expanded world.';
+    $('trainingStatus').textContent=t('New example added. Train to learn your expanded world.');
   });
   document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{if(button.dataset.preset!==presetId)setPreset(button.dataset.preset);}));
   document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
     mode=button.dataset.mode;syncMode();
     if(mode==='restore')prepareRestore();
     else if(trained&&!training)generate();
-    else {updateOutput(noise(),'Untrained random pixel pattern');$('outputTag').textContent=training?'LEARNING IN PROGRESS':'BEFORE LEARNING';$('outputStatus').textContent='First, teach your machine a few patterns.';}
+    else {updateOutput(noise(),t('Untrained random pixel pattern'));$('outputTag').textContent=training?t('LEARNING IN PROGRESS'):t('BEFORE LEARNING');$('outputStatus').textContent=t('First, teach your machine a few patterns.');}
   }));
   $('hiddenUnits').addEventListener('change',resetModel);
   $('epochs').addEventListener('change',resetModel);
@@ -624,7 +625,7 @@
     if (!sampling || sampling.playing) return;
     advanceSampling();
     if (sampling.step < SAMPLING_STEPS) {
-      $('outputStatus').textContent = sampling.mode === 'restore' ? `Trace step ${sampling.step} below. The final sample above stays fixed.` : `Step ${sampling.step}: sampled hidden units, then sampled pixels.`;
+      $('outputStatus').textContent = sampling.mode === 'restore' ? t`Trace step ${sampling.step} below. The final sample above stays fixed.` : t`Step ${sampling.step}: sampled hidden units, then sampled pixels.`;
     }
   });
   $('playbackSpeed').addEventListener('change', scheduleSampling);
@@ -633,11 +634,11 @@
       sampling.playing = false;
       syncPlayback();
       scheduleSampling();
-      $('outputStatus').textContent = 'Motion is reduced. Use Step, or choose Play to continue.';
+      $('outputStatus').textContent = t('Motion is reduced. Use Step, or choose Play to continue.');
     }
   });
   $('damageButton').addEventListener('click',prepareRestore);
-  $('temperature').addEventListener('input',()=>{$('temperatureValue').textContent=Number($('temperature').value).toFixed(1);});
+  $('temperature').addEventListener('input',()=>{$('temperatureValue').textContent=formatNumber($('temperature').value,1);});
   window.addEventListener('resize',drawChart);
   drawHero();renderConcept();setPreset('shapes');syncMode();
 })();

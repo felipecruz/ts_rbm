@@ -12,6 +12,8 @@ const files = [
   'assets/style.css',
   'assets/app.js',
   'assets/math.js',
+  'assets/i18n.js',
+  'assets/locales/pt-BR.js',
   'assets/tutorial.js',
   'assets/vendor/katex',
 ];
