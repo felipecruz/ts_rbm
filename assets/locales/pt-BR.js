@@ -31,7 +31,7 @@ globalThis.PORTUGUESE_MESSAGES = {
   "“what could this be?”": "“o que isto poderia ser?”",
   "A model can learn to recognize a circle. But a": "Um modelo pode aprender a reconhecer um círculo. Mas um",
   "generative model": "modelo generativo",
-  "learns something different: which arrangements of pixels are likely to look like the patterns it has seen.": "aprende algo diferente: quais combinações de pixels têm chance de se parecer com os padrões que ele já viu.",
+  "learns to generate new circles—or, more generally, new examples of the patterns in its training data.": "aprende a gerar novos círculos — ou, de forma mais geral, novos exemplos dos padrões presentes nos dados de treinamento.",
   "Once it learns those relationships, we can ask it to make another pattern. Not by handing it a drawing rule, but by letting it sample from the possibilities it has learned.": "Depois que ele aprende essas relações, podemos pedir que produza outro padrão. Em vez de receber uma regra de desenho, ele sorteia uma amostra entre as possibilidades que aprendeu.",
   "A few examples": "Alguns exemplos",
   "Learn the relationships": "Aprender as relações",
